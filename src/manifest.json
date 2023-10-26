@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "LiveChatHub",
+  "version": "0.0.0.1",
+  "description": "",
+  "permissions": [
+    "cookies",
+    "storage",
+    "contextMenus",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://*.nicovideo.jp/*",
+    "*://*.nimg.jp/*",
+    "*://*.dmc.nico/*",
+    "https://us-central1-ncbrowseroauth.cloudfunctions.net/oauthCallback"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "api-request-user-agent",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "content_security_policy": {
+    "script-src": "'self' 'unsafe-eval' 'sha256-v8v3RKRPmN4odZ1CWM5gw80QKPCCWMcpNeOmimNL2AA='",
+    "object-src": "'self'"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.nicovideo.jp/*",
+        "https://us-central1-ncbrowseroauth.cloudfunctions.net/*"
+      ],
+      "js": [
+        "./content.js"
+      ]
+    }
+  ],
+  "action": {},
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html"
+}
