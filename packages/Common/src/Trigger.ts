@@ -17,7 +17,7 @@ export class Trigger<T extends unknown[] = []> implements SetOnlyTrigger<T> {
   private readonly funcSet = new Set<Fn<T, void>>();
 
   /**
-   * 外部へ公開するためのセット専用トリガー
+   * セット専用トリガーへキャストする
    */
   public asSetOnlyTrigger(): SetOnlyTrigger<T> {
     return this;

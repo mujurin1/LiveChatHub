@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 
 export function useWidnowWidth(): number {
-  const [headerWidth, setHeaderWidth] = useState(0);
+  const [headerWidth, setHeaderWidth] = useState(window.innerWidth);
 
   const notifyRowSizes = useCallback(() => {
     setHeaderWidth(window.innerWidth);

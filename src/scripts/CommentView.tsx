@@ -4,7 +4,6 @@ import { VirtualListLayoutManager } from "./components_/VirtualListLayoutManager
 import { RowRenderProps, VirtualListView } from "./components_/VirtualList";
 import { UpdateVariation } from "./definition/LiveChatNotify";
 import { dep } from "./service/dep";
-import { ResizableAlign } from "@lch/component";
 import { Trigger, assertNotNullish } from "@lch/common";
 
 export function CommentView() {
@@ -69,7 +68,7 @@ export function CommentView() {
         flex-flow: column;
       `}
     >
-      <ResizableAlign
+      {/* <ResizableAlign
         minWidths={columnsMinWidth}
         defaultWidths={columnsWidth}
         flexIndex={4}
@@ -90,7 +89,7 @@ export function CommentView() {
           <div key="D" css={columCss}>時間</div>,
           <div key="E" css={columCss}>コメント</div>,
         ]}
-      </ResizableAlign>
+      </ResizableAlign> */}
       <div
         css={css`
           flex: auto;

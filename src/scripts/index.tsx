@@ -1,19 +1,25 @@
 import { createRoot } from "react-dom/client";
 import { Button, Dialog, css } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Provider } from "react-redux";
 import { CommentView } from "./CommentView";
 import { Connection } from "./components_/Connection";
 import { LiveError } from "./definition/model/LiveError";
 import { dep } from "./service/dep";
-import { useWidnowWidth } from "@lch/component";
-import { CommentViewHeader } from "./components/CommentViewHeader";
+import { CommentViewHeader, CommentViewHeaderState } from "./components/CommentViewHeader";
 import { CommentViewBody } from "./components/CommentViewBody";
+import { useWidnowWidth } from "./hooks/useWidnowWidth";
+import { store } from "./store";
+
+import "../styles/index.css";
 
 createRoot(document.getElementById("root")!)
   .render(
     <React.StrictMode>
-      {/* <IndexComponent /> */}
-      <TestComponent />
+      <Provider store={store}>
+        {/* <IndexComponent /> */}
+        <TestComponent />
+      </Provider>
     </React.StrictMode>
   );
 
@@ -87,14 +93,27 @@ function IndexComponent() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TestComponent() {
-  // const headerWidth = useWidnowWidth();
   const headerWidth = useWidnowWidth();
+
+  const [headerState, setHeaderState] = useState<CommentViewHeaderState>({
+    flexIndex: 3,
+    widths: [100, 100, 100, headerWidth - 300]
+  });
+
+  const setWidths = useCallback(
+    (newWidths: number[], _index: number, _isLast: boolean) => {
+      setHeaderState(oldValue => ({ ...oldValue, widths: newWidths }));
+    },
+    []
+  );
 
   return (
     <div>
       <CommentViewHeader
         width={headerWidth}
         height={50}
+        state={headerState}
+        setWidths={setWidths}
       />
       <CommentViewBody />
     </div>
