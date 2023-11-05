@@ -39,6 +39,8 @@ module.exports = {
       rules: {
         "@typescript-eslint/no-explicit-any": "warn",
         "@typescript-eslint/no-misused-promises": "off",
+        "@typescript-eslint/no-unsafe-assignment": "warn",
+        // "@typescript-eslint/prefer-const": "warn",
         "@typescript-eslint/no-unused-vars": [
           "warn",
           {

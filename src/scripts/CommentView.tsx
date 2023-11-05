@@ -72,7 +72,6 @@ export function CommentView() {
         minWidths={columnsMinWidth}
         defaultWidths={columnsWidth}
         flexIndex={4}
-        confirmedPartition={changeColumnWidth}
         width={headerWidth}
         cssString={`
           width: 100%;

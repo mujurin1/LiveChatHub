@@ -1,25 +1,16 @@
-import { useState, useMemo, useCallback, useLayoutEffect } from "react";
+
+import { useState, useCallback, useEffect } from "react";
 import React from "react";
 import { css } from "@emotion/react";
+import { useDispatch } from "react-redux";
+import { ColumnState, setColumnsTemp, setWidth, setWidthAndFlexWidth } from "../slices/headerSlice";
+import { useAppSelector } from "../store";
 
 import "./CommentView.css";
 
-
-export interface CommentViewHeaderState {
-  /**
-   * 各列の幅
-   */
-  widths: number[];
-  /**
-   * 他の要素によって幅が縮む列のインデックス
-   */
-  flexIndex: number;
-}
-
+const minWidth = 20;
 
 export interface CommentViewHeaderProps {
-  state: CommentViewHeaderState;
-
   /**
    * ヘッダーの幅
    */
@@ -28,166 +19,12 @@ export interface CommentViewHeaderProps {
    * ヘッダーの高さ
    */
   height: number;
-
-  /**
-   * 各列の幅を変更する
-   * @param newWidths 各列の幅
-   * @param index 動かしたパーティションのインデックス
-   * @param isLast 幅の変更は連続して行われるのでそれが今回で終わるか
-   */
-  setWidths: (newWidths: number[], index: number, isLast: boolean) => void;
 }
 
-const minWidths = [20, 20, 20, 20];
-const headerElements = [
-  <div key="A" className="comment-view-header-item">アイコン</div>,
-  <div key="B" className="comment-view-header-item">ユーザーID</div>,
-  <div key="C" className="comment-view-header-item">時間</div>,
-  <div key="D" className="comment-view-header-item">コメント</div>,
-];
-
 export function CommentViewHeader(props: CommentViewHeaderProps) {
-  const state = props.state;
-  const widths = state.widths;
-  const setWidths = props.setWidths;
-  const [temp, setTemp] = useState<ResizeTemp | null>(null);
-
-  useMemo(() => {
-    let flexWidth = props.width;
-    for (let i = 0; i < widths.length; i++) {
-      if (i === state.flexIndex) continue;
-      flexWidth -= widths[i];
-    }
-    if (widths[state.flexIndex] === flexWidth) return;
-    widths[state.flexIndex] = flexWidth;
-    setWidths([...widths], state.flexIndex, true);
-  }, [state.flexIndex, props.width, setWidths, widths]);
-
-  const changeWidths = useCallback(
-    (clientX: number, isLast: boolean): boolean => {
-      if (temp == null) return false;
-      /** 幅の変化量 */
-      let amount = clientX - temp.startX;
-      if (amount === 0) return false;
-      if (!temp.left) amount *= -1;
-
-      widths[temp.index] = temp.startTargetWidth + amount;
-      widths[state.flexIndex] = temp.startFlexWidth - amount;
-
-      const limit = widths[temp.index] - minWidths[temp.index];
-      if (limit < 0) {
-        widths[temp.index] -= limit;
-        widths[state.flexIndex] += limit;
-      } else {
-        const limit = widths[state.flexIndex] - minWidths[state.flexIndex];
-        if (limit < 0) {
-          widths[temp.index] += limit;
-          widths[state.flexIndex] -= limit;
-        }
-      }
-
-      setWidths([...widths], temp.index, isLast);
-
-      return true;
-    },
-    [temp, widths, state.flexIndex, setWidths]
-  );
-
-  const onMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
-      const left = index < state.flexIndex;
-      if (!left) index++;
-      setTemp({
-        index,
-        startTargetWidth: widths[index],
-        startFlexWidth: widths[state.flexIndex],
-        startX: e.clientX,
-        left,
-      });
-    },
-    [state.flexIndex, widths]
-  );
-
-  const onMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (temp == null) return;
-
-      changeWidths(e.clientX, false);
-    },
-    [changeWidths, temp]
-  );
-
-  const onMouseUp = useCallback(
-    (e: MouseEvent) => {
-      if (temp == null) return;
-
-      changeWidths(e.clientX, true);
-      setTemp(null);
-    },
-    [changeWidths, temp]
-  );
-
-  const childElement = useMemo<React.ReactElement[]>(
-    () => {
-      const lastIndex = headerElements.length - 1;
-      const elements: React.ReactElement[] = [];
-
-      for (let i = 0; i < headerElements.length; i++) {
-        elements.push(
-          <React.Fragment key={i}>
-            <div
-              css={css`
-              position: relative;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100%;
-              width: ${widths[i]}px;
-              user-select: none;
-              min-width: ${minWidths[i]}px;
-              `}
-            >
-              {headerElements[i]}
-              {i === lastIndex ? undefined :
-                <div
-                  css={css`
-                  position: absolute;
-                  top: 0;
-                  right: 0;
-                  width: 1px;
-                  height: 100%;
-                  background-color: #999;
-                  user-select: none;
-                  cursor: col-resize;
-                  ::before {
-                    content: "";
-                    position: absolute;
-                    min-width: 15px;
-                    transform: translateX(-50%);
-                    z-index: 1;
-                    height: 100%;
-                  }
-                  `}
-                  onMouseDown={(e) => onMouseDown(e, i)}
-                />}
-            </div>
-          </React.Fragment>
-        );
-      }
-
-      return elements;
-    },
-    [onMouseDown, widths]
-  );
-
-  useLayoutEffect(() => {
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [onMouseMove, onMouseUp]);
+  const columnsTemp = useAppSelector(state => state.header.columnsTemp);
+  const { headerColumns, partitionMouseDown } = useCommentViewHeaderState(props.width);
+  const lastIndex = headerColumns.length - 1;
 
   return (
     <div
@@ -199,10 +36,150 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
       height: ${props.height}px;
       `}
     >
-      {childElement}
+      {(columnsTemp ?? headerColumns).map((column, i) => (
+        <div
+          key={column.type}
+          css={css`
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100%;
+          width: ${column.width}px;
+          user-select: none;
+          min-width: ${minWidth}px;
+          `}
+        >
+          <div className="comment-view-header-item">{column.type}</div>
+          {i === lastIndex ? undefined :
+            <div
+              className="comment-view-header-partition"
+              onMouseDown={e => partitionMouseDown(e, i)}
+            />}
+        </div>
+      ))}
     </div>
   );
 }
+
+function useCommentViewHeaderState(width: number) {
+  const [resizeTemp, setResizeTemp] = useState<ResizeTemp | null>(null);
+  const [resetedPartionEvent, setResetedPartionEvent] = useState(false);
+  const [removeEventListener, setRemoveEventListener] = useState<(() => void) | null>(null);
+
+  const columnsTemp = useAppSelector(state => state.header.columnsTemp);
+  const headerColumns = useAppSelector(state => state.header.columns);
+  const flexIndex = useAppSelector(state => state.header.flexIndex);
+  const dispatch = useDispatch();
+
+  // 横幅の再調整
+  useEffect(() => {
+    const oldWidth = headerColumns.reduce((s, v) => s - v.width, width);
+    if (oldWidth === 0) return;
+
+    const flexWidth = headerColumns[flexIndex].width + oldWidth;
+    dispatch(setWidth(flexIndex, flexWidth));
+  }, [dispatch, flexIndex, headerColumns, width]);
+
+  useEffect(
+    () => {
+      if (!resetedPartionEvent || resizeTemp == null || columnsTemp == null) return;
+      setResetedPartionEvent(false);
+
+      const changeWidths = (clientX: number, isFinish: boolean): void => {
+        /** 幅の変化量 */
+        let amount = clientX - resizeTemp.startX;
+        if (amount === 0) return;
+
+        if (!resizeTemp.left) amount *= -1;
+
+        let width = resizeTemp.startTargetWidth + amount;
+        let flexWidth = resizeTemp.startFlexWidth - amount;
+
+        const limit = width - minWidth;
+        if (limit < 0) {
+          width -= limit;
+          flexWidth += limit;
+        } else {
+          const flexLimit = flexWidth - minWidth;
+          if (flexLimit < 0) {
+            width += flexLimit;
+            flexWidth -= flexLimit;
+          }
+        }
+
+        if (isFinish) {
+          dispatch(setWidthAndFlexWidth(resizeTemp.index, width, flexWidth));
+        } else {
+          const columns = [...columnsTemp];
+          columns[resizeTemp.index] = {
+            ...columns[resizeTemp.index],
+            width,
+          };
+          columns[flexIndex] = {
+            ...columns[flexIndex],
+            width: flexWidth,
+          };
+          columns[flexIndex].width = flexWidth;
+          dispatch(setColumnsTemp(columns));
+        }
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+        changeWidths(e.clientX, false);
+      };
+
+      const onMouseUp = (e: MouseEvent) => {
+        changeWidths(e.clientX, true);
+        setResizeTemp(null);
+        dispatch(setColumnsTemp(null));
+
+        removeEventListener();
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+
+      const removeEventListener = () => {
+        setRemoveEventListener(null);
+
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+
+      setRemoveEventListener(() => removeEventListener);
+    },
+    [dispatch, flexIndex, resizeTemp, columnsTemp, resetedPartionEvent]
+  );
+
+  const partitionMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
+      removeEventListener?.();
+
+      const left = index < flexIndex;
+      if (!left) index++;
+
+      setResizeTemp({
+        index,
+        startTargetWidth: headerColumns[index].width,
+        startFlexWidth: headerColumns[flexIndex].width,
+        startX: e.clientX,
+        left,
+      });
+      dispatch(setColumnsTemp(headerColumns));
+
+      setResetedPartionEvent(true);
+    },
+    [dispatch, flexIndex, headerColumns, removeEventListener]
+  );
+
+  return {
+    headerColumns,
+    partitionMouseDown,
+  };
+}
+
+
 
 interface ResizeTemp {
   /**
@@ -225,4 +202,9 @@ interface ResizeTemp {
    * フレックスカラムより左か
    */
   left: boolean;
+}
+
+interface LogicTemp {
+  resize: ResizeTemp;
+  columns: ColumnState[];
 }

@@ -4,3 +4,24 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+.comment-view-header-partition {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background-color: #999;
+  user-select: none;
+  cursor: col-resize;
+
+}
+
+.comment-view-header-partition::before {
+  content: "";
+  position: absolute;
+  min-width: 15px;
+  transform: translateX(-50%);
+  z-index: 1;
+  height: 100%;
+}

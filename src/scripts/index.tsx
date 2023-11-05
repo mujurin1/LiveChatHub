@@ -6,10 +6,11 @@ import { CommentView } from "./CommentView";
 import { Connection } from "./components_/Connection";
 import { LiveError } from "./definition/model/LiveError";
 import { dep } from "./service/dep";
-import { CommentViewHeader, CommentViewHeaderState } from "./components/CommentViewHeader";
+// import { CommentViewHeader, CommentViewHeaderState } from "./components/CommentViewHeader_";
+import { CommentViewHeader } from "./components/CommentViewHeader";
 import { CommentViewBody } from "./components/CommentViewBody";
 import { useWidnowWidth } from "./hooks/useWidnowWidth";
-import { store } from "./store";
+import { store, useAppSelector } from "./store";
 
 import "../styles/index.css";
 
@@ -90,37 +91,25 @@ function IndexComponent() {
   );
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TestComponent() {
   const headerWidth = useWidnowWidth();
-
-  const [headerState, setHeaderState] = useState<CommentViewHeaderState>({
-    flexIndex: 3,
-    widths: [100, 100, 100, headerWidth - 300]
-  });
-
-  const setWidths = useCallback(
-    (newWidths: number[], _index: number, _isLast: boolean) => {
-      setHeaderState(oldValue => ({ ...oldValue, widths: newWidths }));
-    },
-    []
-  );
+  const realityColumns = useAppSelector(state => state.header.columns)
+    .map(x => x.width);
+  const tempColumns = useAppSelector(state => state.header.columnsTemp)
+    ?.map(x => x.width);
 
   return (
     <div>
       <CommentViewHeader
         width={headerWidth}
         height={50}
-        state={headerState}
-        setWidths={setWidths}
       />
       <CommentViewBody />
+      <div style={{ fontSize: 32 }}>
+        <div>realityColumns: {realityColumns.join()}</div>
+        <div>tempColumns: {tempColumns?.join() ?? "null"}</div>
+      </div>
     </div>
   );
 }
-
-
-
-
-

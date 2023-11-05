@@ -15,8 +15,6 @@ export function CommentViewBody() {
 }
 
 function CommentViewRow() {
-
-
   return (
     <div
       css={css`
