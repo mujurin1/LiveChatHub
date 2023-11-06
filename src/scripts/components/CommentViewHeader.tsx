@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 import React from "react";
 import { css } from "@emotion/react";
 import { useDispatch } from "react-redux";
-import { ColumnState, setColumnsTemp, setWidth, setWidthAndFlexWidth } from "../slices/headerSlice";
+import { setColumnsTemp, setWidth, setWidthAndFlexWidth } from "../slices/headerSlice";
 import { useAppSelector } from "../store";
 
 import "./CommentView.css";
@@ -28,6 +28,7 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
 
   return (
     <div
+      className="comment-view-header"
       css={css`
       display: flex;
       align-items: center;
@@ -39,6 +40,7 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
       {(columnsTemp ?? headerColumns).map((column, i) => (
         <div
           key={column.type}
+          className="comment-view-header-item"
           css={css`
           position: relative;
           display: flex;
@@ -50,10 +52,10 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
           min-width: ${minWidth}px;
           `}
         >
-          <div className="comment-view-header-item">{column.type}</div>
+          <div className="comment-view-header-item-content">{column.type}</div>
           {i === lastIndex ? undefined :
             <div
-              className="comment-view-header-partition"
+              className="comment-view-header-item-partition"
               onMouseDown={e => partitionMouseDown(e, i)}
             />}
         </div>
@@ -202,9 +204,4 @@ interface ResizeTemp {
    * フレックスカラムより左か
    */
   left: boolean;
-}
-
-interface LogicTemp {
-  resize: ResizeTemp;
-  columns: ColumnState[];
 }

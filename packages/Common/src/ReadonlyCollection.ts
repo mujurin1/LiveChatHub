@@ -1,36 +1,51 @@
 import { Fn } from "./util";
 
 /**
- * インデックス・キーから要素を取り出せるコレクション`
- * Value(V)の中には`string`のキーを持ったプロパティが必要
+ * 一意のキーと値をセットで持っている読み取り専用コレクション\
+ * キーの配列, 値の配列, キーから値の取得が可能
  */
-export interface ReadonlyCollection<V> extends Iterable<readonly [string, V]> {
+export interface ReadonlyCollection<V> {    // extends Iterable<V> {
+  /**
+   * {Key: Index} のレコード
+   */
+  readonly keyIndexes: Readonly<Record<string, number>>;
+
   /**
    * 要素数
    */
-  length: number;
+  readonly length: number;
 
   /**
-   * インデックスから要素を取り出す
-   * @param index インデックス
+   * キーの配列
    */
-  at(index: number): V | undefined;
+  readonly keys: ReadonlyArray<string>;
 
   /**
-   * キーから要素を取り出す
+   * 値の配列
+   */
+  readonly values: ReadonlyArray<V>;
+
+  /**
+   * キーから値を取り出す
    * @param key キー
    */
-  get(key: string): V | undefined;
+  getValue(key: string): V | undefined;
 
   /**
-   * 現在の要素から条件に一致する要素だけの新しいコレクションを返す
-   * @param fn 条件式
+   * インデックスから値を取り出す
+   * @param index インデックス
    */
-  filter(fn: Fn<[V], boolean>): ReadonlyCollection<V>;
+  atValue(index: number): V | undefined;
 
-  /**
-   * 最初に一致する要素を返す
-   * @param fn 条件式
-   */
-  find(fn: Fn<[V], boolean>): V | undefined;
+  // /**
+  //  * 現在の要素から条件に一致する要素だけの新しいコレクションを返す
+  //  * @param fn 条件式
+  //  */
+  // filter(fn: Fn<[V], boolean>): ReadonlyCollection<V>;
+
+  // /**
+  //  * 最初に一致する要素を返す
+  //  * @param fn 条件式
+  //  */
+  // find(fn: Fn<[V], boolean>): V | undefined;
 }

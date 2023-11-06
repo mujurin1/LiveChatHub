@@ -1,18 +1,18 @@
 import { createRoot } from "react-dom/client";
 import { Button, Dialog, css } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Provider } from "react-redux";
 import { CommentView } from "./CommentView";
 import { Connection } from "./components_/Connection";
 import { LiveError } from "./definition/model/LiveError";
 import { dep } from "./service/dep";
-// import { CommentViewHeader, CommentViewHeaderState } from "./components/CommentViewHeader_";
 import { CommentViewHeader } from "./components/CommentViewHeader";
-import { CommentViewBody } from "./components/CommentViewBody";
+import { CommentViewBody, CommentViewBodyState, RowRender } from "./components/CommentViewBody";
 import { useWidnowWidth } from "./hooks/useWidnowWidth";
 import { store, useAppSelector } from "./store";
 
 import "../styles/index.css";
+import { nanoid } from "@reduxjs/toolkit";
 
 createRoot(document.getElementById("root")!)
   .render(
@@ -20,9 +20,37 @@ createRoot(document.getElementById("root")!)
       <Provider store={store}>
         {/* <IndexComponent /> */}
         <TestComponent />
+        {/* <XComponent /> */}
       </Provider>
     </React.StrictMode>
   );
+
+
+function XComponent() {
+  const ref = useRef<HTMLDivElement>(null);
+  const observer = useMemo(() => new ResizeObserver(entories => {
+    // console.log(entories.length);
+    // console.log(entories[0].target.clientHeight);
+    console.log(ref.current?.dataset);
+
+  }), []);
+
+  useEffect(() => {
+    const current = ref.current;
+    if (current == null) return;
+    observer.observe(current);
+    return () => observer.unobserve(current);
+  }, [observer, ref]);
+
+  const ele = <div key={0} data-row-key={0} ref={ref}>あいうえお</div>;
+  // ele.props["data-x"] = 0;
+  console.log(ele.props);
+  console.log(ele.key);
+
+
+  return ele;
+}
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function IndexComponent() {
@@ -99,17 +127,47 @@ function TestComponent() {
   const tempColumns = useAppSelector(state => state.header.columnsTemp)
     ?.map(x => x.width);
 
+  const r = useMemo(() => ({ state: (null!) as CommentViewBodyState }), []);
+
+  const [, set] = useState(0);
+
   return (
     <div>
-      <CommentViewHeader
-        width={headerWidth}
-        height={50}
-      />
-      <CommentViewBody />
+      <div
+        css={css`
+        display: flex;
+        flex-flow: column;
+        height: 450px;
+        `}>
+        <CommentViewHeader
+          width={headerWidth}
+          height={50}
+        />
+        <CommentViewBody
+          height={450}
+          rowRender={rowRender}
+          stateRef={r}
+        />
+      </div>
+
+      <div>
+        <input type="text" id="input_text" />
+        <button onClick={() => {
+          r?.state?.addRowItem(nanoid());
+          set(x => ~x);
+        }}>追加</button>
+        <div>
+          全体の高さ: {r?.state?.sum}
+        </div>
+      </div>
+
       <div style={{ fontSize: 32 }}>
         <div>realityColumns: {realityColumns.join()}</div>
         <div>tempColumns: {tempColumns?.join() ?? "null"}</div>
       </div>
+
     </div>
   );
 }
+
+const rowRender: RowRender = (key, id) => <div>{`${key} - ${id}`}</div>;

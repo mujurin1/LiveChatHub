@@ -1,11 +1,11 @@
-.comment-view-header-item {
+.comment-view-header-item-content {
   font-size: 18px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.comment-view-header-partition {
+.comment-view-header-item-partition {
   position: absolute;
   top: 0;
   right: 0;
@@ -14,10 +14,9 @@
   background-color: #999;
   user-select: none;
   cursor: col-resize;
-
 }
 
-.comment-view-header-partition::before {
+.comment-view-header-item-partition::before {
   content: "";
   position: absolute;
   min-width: 15px;

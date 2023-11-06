@@ -1,82 +1,74 @@
 import { ReadonlyCollection } from "./ReadonlyCollection";
-import { Fn } from "./util";
 
 /**
- * 一意のキーを持っている値のコレクション\
- * 追加・変更のみできる
+ * 一意のキーと値をセットで持っているコレクション\
+ * インデックスはキーの追加された順序\
+ * キーの配列, 値の配列, キーから値の取得が可能
  */
 export class SetonlyCollection<V> implements ReadonlyCollection<V> {
-  /**
-   * Valueからキーを取得する
-   */
-  readonly #getKey: Fn<[V], string>;
-  readonly #array: V[];
-  /**
-   * Record<Key, Index>
-   */
-  readonly #record: Record<string, number>;
+  readonly keyIndexes: Record<string, number> = {};
+  readonly keys: string[] = [];
+  readonly values: V[] = [];
+
 
   /**
    * 要素数
    */
   public get length(): number {
-    return this.#array.length;
+    return this.keys.length;
   }
 
   /**
    * コンストラクタ
-   * @param getKey `V`に存在するキープロパティ名
    */
-  constructor(getKey: Fn<[V], string>) {
-    this.#getKey = getKey;
-    this.#array = [];
-    this.#record = {};
+  constructor() { }
+
+  getValue(key: string): V {
+    const index = this.keyIndexes[key];
+    return this.values[index];
   }
 
-  at(index: number): V | undefined {
-    return this.#array.at(index);
-  }
-
-  get(key: string): V | undefined {
-    const index = this.#record[key];
-    return this.#array[index];
+  atValue(index: number): V | undefined {
+    return this.values.at(index);
   }
 
   /**
    * 新しい要素をセットする\
-   * すでにある要素は上書きする
+   * 既に同じキーが存在する場合は上書きする
+   * @param key キー
    * @param value 値
    */
-  set(value: V): void {
-    const key = this.#getKey(value);
-    const index = this.#record[key];
+  set(key: string, value: V): void {
+    const index = this.keyIndexes[key];
     if (index == null) {
-      this.#record[key] = this.#array.length;
-      this.#array.push(value);
+      const index = this.keys.length;
+      this.keyIndexes[key] = this.keys.length;
+      this.keys[index] = key;
+      this.values[index] = value;
     } else {
-      this.#array[index] = value;
+      this.values[index] = value;
     }
   }
 
-  filter(fn: Fn<[V], boolean>): SetonlyCollection<V> {
-    const collection = new SetonlyCollection<V>(this.#getKey);
-    for (const [_, value] of this) {
-      if (fn(value)) collection.set(value);
-    }
+  // filter(fn: Fn<[V], boolean>): SetonlyCollection<V> {
+  //   const collection = new SetonlyCollection<V>(this.#getKey);
+  //   for (const [_, value] of this) {
+  //     if (fn(value)) collection.set(value);
+  //   }
 
-    return collection;
-  }
+  //   return collection;
+  // }
 
-  find(fn: Fn<[V], boolean>): V | undefined {
-    for (const [_, value] of this) {
-      if (fn(value)) return value;
-    }
-  }
+  // find(fn: Fn<[V], boolean>): V | undefined {
+  //   for (const [_, value] of this) {
+  //     if (fn(value)) return value;
+  //   }
+  // }
 
-  *[Symbol.iterator](): Iterator<readonly [string, V], void, undefined> {
-    for (const value of this.#array) {
-      const key = this.#getKey(value);
-      yield [key, value];
-    }
-  }
+  // *[Symbol.iterator](): Iterator<readonly [string, V], void, undefined> {
+  //   for (const value of this.values) {
+  //     const key = this.#getKey(value);
+  //     yield [key, value];
+  //   }
+  // }
 }
