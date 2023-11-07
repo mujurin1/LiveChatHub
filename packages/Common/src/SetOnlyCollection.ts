@@ -5,9 +5,12 @@ import { ReadonlyCollection } from "./ReadonlyCollection";
  * インデックスはキーの追加された順序\
  * キーの配列, 値の配列, キーから値の取得が可能
  */
-export class SetonlyCollection<V> implements ReadonlyCollection<V> {
-  readonly keyIndexes: Record<string, number> = {};
-  readonly keys: string[] = [];
+export class SetonlyCollection<
+  V,
+  K extends number | string = string
+> implements ReadonlyCollection<V, K> {
+  readonly keyIndexes: Record<K, number> = {} as Record<K, number>;
+  readonly keys: K[] = [];
   readonly values: V[] = [];
 
 
@@ -21,9 +24,15 @@ export class SetonlyCollection<V> implements ReadonlyCollection<V> {
   /**
    * コンストラクタ
    */
-  constructor() { }
+  constructor(initials?: { key: K, value: V; }[]) {
+    if (initials != null) {
+      for (const data of initials) {
+        this.set(data.key, data.value);
+      }
+    }
+  }
 
-  getValue(key: string): V {
+  getValue(key: K): V {
     const index = this.keyIndexes[key];
     return this.values[index];
   }
@@ -38,7 +47,7 @@ export class SetonlyCollection<V> implements ReadonlyCollection<V> {
    * @param key キー
    * @param value 値
    */
-  set(key: string, value: V): void {
+  set(key: K, value: V): void {
     const index = this.keyIndexes[key];
     if (index == null) {
       const index = this.keys.length;

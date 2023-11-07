@@ -4,11 +4,14 @@ import { Fn } from "./util";
  * 一意のキーと値をセットで持っている読み取り専用コレクション\
  * キーの配列, 値の配列, キーから値の取得が可能
  */
-export interface ReadonlyCollection<V> {    // extends Iterable<V> {
+export interface ReadonlyCollection<
+  V,
+  K extends number | string = string
+> {
   /**
-   * {Key: Index} のレコード
+   * { Key: Index } のレコード
    */
-  readonly keyIndexes: Readonly<Record<string, number>>;
+  readonly keyIndexes: Readonly<Record<K, number>>;
 
   /**
    * 要素数
@@ -18,7 +21,7 @@ export interface ReadonlyCollection<V> {    // extends Iterable<V> {
   /**
    * キーの配列
    */
-  readonly keys: ReadonlyArray<string>;
+  readonly keys: ReadonlyArray<K>;
 
   /**
    * 値の配列
@@ -29,7 +32,7 @@ export interface ReadonlyCollection<V> {    // extends Iterable<V> {
    * キーから値を取り出す
    * @param key キー
    */
-  getValue(key: string): V | undefined;
+  getValue(key: K): V | undefined;
 
   /**
    * インデックスから値を取り出す

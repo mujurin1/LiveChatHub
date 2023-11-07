@@ -13,3 +13,23 @@ export function assertNotNullish<T>(
 }
 
 export type Fn<A extends unknown[] = [], R = void> = (...arg: A) => R;
+
+/**
+ * min 以上 max 未満の範囲の整数を引数に関数を実行する
+ * @param min
+ * @param max
+ * @param reducer
+ */
+export function reduceFromRange<T>(
+  min: number,
+  max: number,
+  reducer: (i: number) => T
+): T[] {
+  const ary: T[] = [];
+
+  for (let i = min; i < max; i++) {
+    ary.push(reducer(i));
+  }
+
+  return ary;
+}

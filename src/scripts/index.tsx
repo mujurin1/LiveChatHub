@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { Button, Dialog, css } from "@mui/material";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Provider } from "react-redux";
 import { CommentView } from "./CommentView";
 import { Connection } from "./components_/Connection";
@@ -19,38 +19,24 @@ createRoot(document.getElementById("root")!)
     <React.StrictMode>
       <Provider store={store}>
         {/* <IndexComponent /> */}
-        <TestComponent />
-        {/* <XComponent /> */}
+        {/* <TestComponent /> */}
+        <XComponent />
       </Provider>
     </React.StrictMode>
   );
 
 
 function XComponent() {
-  const ref = useRef<HTMLDivElement>(null);
-  const observer = useMemo(() => new ResizeObserver(entories => {
-    // console.log(entories.length);
-    // console.log(entories[0].target.clientHeight);
-    console.log(ref.current?.dataset);
+  const [value, setValue] = useState(10);
+  const ref = useRef(value);
 
-  }), []);
-
-  useEffect(() => {
-    const current = ref.current;
-    if (current == null) return;
-    observer.observe(current);
-    return () => observer.unobserve(current);
-  }, [observer, ref]);
-
-  const ele = <div key={0} data-row-key={0} ref={ref}>あいうえお</div>;
-  // ele.props["data-x"] = 0;
-  console.log(ele.props);
-  console.log(ele.key);
-
-
-  return ele;
+  return (
+    <div>
+      {ref.current}
+      <button onClick={() => setValue(x => x + 1)}>クリック: {value}</button>
+    </div>
+  );
 }
-
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function IndexComponent() {

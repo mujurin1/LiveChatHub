@@ -49,6 +49,7 @@ module.exports = {
             "caughtErrorsIgnorePattern": "^_"
           }
         ],
+        "no-constant-condition": ["error", { "checkLoops": false }],
       },
     },
     {
