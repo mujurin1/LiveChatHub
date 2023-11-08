@@ -72,6 +72,14 @@ export class LinkedList<V> {
     return undefined;
   }
 
+  map<R>(fn: (node: LinkedNode<V>) => R): R[] {
+    const ary: R[] = [];
+    for (const node of this) {
+      ary.push(fn(node));
+    }
+    return ary;
+  }
+
   __dbg_get_next(count: number) {
     let node = this.first;
     for (let i = 0; i < count; i++) {

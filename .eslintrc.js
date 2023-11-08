@@ -50,6 +50,8 @@ module.exports = {
           }
         ],
         "no-constant-condition": ["error", { "checkLoops": false }],
+        "@typescript-eslint/no-base-to-string": "off",
+        "@typescript-eslint/restrict-template-expressions": "off",
       },
     },
     {

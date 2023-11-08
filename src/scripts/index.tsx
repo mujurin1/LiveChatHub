@@ -19,22 +19,113 @@ createRoot(document.getElementById("root")!)
     <React.StrictMode>
       <Provider store={store}>
         {/* <IndexComponent /> */}
-        {/* <TestComponent /> */}
-        <XComponent />
+        <TestComponent />
+        {/* <XComponent /> */}
       </Provider>
     </React.StrictMode>
   );
 
 
+const viewportHeight = 400;
 function XComponent() {
-  const [value, setValue] = useState(10);
-  const ref = useRef(value);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollObjRef = useRef<HTMLImageElement>(null);
+  const [scrObjHeight, setScrObjHeight] = useState(500);
+  const [isAddComment, setIsAddComment] = useState(false);
+
+  useEffect(() => {
+    const target = scrollRef.current;
+    if (target == null) return;
+
+    const scrollEvent = (e: Event) => {
+      // console.log("                        スクロールイベント");
+    };
+    target.addEventListener("scroll", scrollEvent);
+
+    const wheelEvent = (e: WheelEvent) => {
+      // console.log(`スクロール: WHEEL    ${scrollRef.current?.scrollTop}`);
+    };
+    target.addEventListener("wheel", wheelEvent);
+    return () => {
+      target.removeEventListener("wheel", wheelEvent);
+      target.removeEventListener("scroll", scrollEvent);
+    };
+  }, [scrObjHeight]);
+
+  useEffect(() => {
+    if (!isAddComment) return;
+
+    const add = () => {
+
+      const scroll = scrollRef.current;
+      const scrollObj = scrollObjRef.current;
+      if (scroll == null || scrollObj == null) return;
+
+      const add = 10;
+      setScrObjHeight(scrObjHeight + add);
+      // ======= ここで要素の高さを直接変更する必要がある =======
+      scrollObj.style.height = `${scrObjHeight + add}px`;
+
+
+      const bottom = (scrObjHeight) - viewportHeight;
+      // console.log(`(scrObjHeight) - viewportHeight = bottom`);
+      // console.log(`(${scrObjHeight}) - ${viewportHeight} = ${bottom}`);
+      // console.log("scroll.scrollTop", scroll.scrollTop);
+
+
+      const isAutoScroll = bottom === scroll.scrollTop;
+
+      if (!isAutoScroll) return;
+
+      // console.log("スクロール:        AUTO");
+      scroll.scrollTop = bottom + add;
+    };
+    // const clear = setInterval(add, 300);
+    const clear = setInterval(add, 1);
+
+    return () => clearInterval(clear);
+  }, [isAddComment, scrObjHeight]);
+
+  const scrollTo = useCallback((y: number) => {
+    const target = scrollRef.current;
+    if (target == null) return;
+
+    // target.scrollTo(0, y);
+    target.scrollTop = target.scrollHeight;
+  }, []);
 
   return (
-    <div>
-      {ref.current}
-      <button onClick={() => setValue(x => x + 1)}>クリック: {value}</button>
-    </div>
+    <>
+      <div
+        ref={scrollRef}
+        css={css`
+        height: ${viewportHeight}px;
+        overflow: auto;
+        `}
+      >
+        <div
+          ref={scrollObjRef}
+          css={css`
+          height: ${scrObjHeight}px;
+          width: 200px;
+          `}
+        />
+
+        {/* <img
+          ref={scrollObjRef}
+          css={css`
+          height: ${scrObjHeight}px;
+          width: 200px;
+          `}
+          src="https://img.freepik.com/free-photo/vertical-shot-old-fishing-boats-turned-upside-down-gloomy-sky_181624-39284.jpg?w=740&t=st=1699424432~exp=1699425032~hmac=a6e4f89a21aa022e1237485f87f7b3e654dc75adee71502f36da0f7f07fbba1c"
+        /> */}
+      </div>
+
+      <button onClick={() => scrollTo(0)}>Top</button><br />
+      <button onClick={() => scrollTo(398 / 2)}>center</button><br />
+      <button onClick={() => scrollTo(398)}>center</button><br />
+      <button onClick={() => setIsAddComment(x => !x)}>コメント自動追加 {isAddComment ? "TRUE" : "FALSE"}</button>
+    </>
   );
 }
 
@@ -123,7 +214,7 @@ function TestComponent() {
         css={css`
         display: flex;
         flex-flow: column;
-        height: 450px;
+        // height: 450px;
         `}>
         <CommentViewHeader
           width={headerWidth}
@@ -137,13 +228,14 @@ function TestComponent() {
       </div>
 
       <div>
-        <input type="text" id="input_text" />
+        <input type="number" id="input_text" />
         <button onClick={() => {
-          r?.state?.addRowItem(nanoid());
+          r?.state?.addContent(nanoid(), 40);
+          // r?.state?.addContent(nanoid(), +input_text.value);
           set(x => ~x);
         }}>追加</button>
         <div>
-          全体の高さ: {r?.state?.sum}
+          全体の高さ: {r?.state?.sumContentHeight ?? "?"}
         </div>
       </div>
 
@@ -156,4 +248,17 @@ function TestComponent() {
   );
 }
 
-const rowRender: RowRender = (key, id) => <div>{`${key} - ${id}`}</div>;
+const rowRender: RowRender = (key, rowLayout) => (
+  <div
+    css={css`
+    background-color: #b7e8fd;
+    height: 40px;
+    top: ${rowLayout.top}px;
+    left: 100px;
+    // position: relative;
+    position: absolute;
+    `}
+  >
+    {`key-${key} / id-${rowLayout.contentId}`}
+  </div>
+);

@@ -1,6 +1,6 @@
 import { css } from "@emotion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LinkedList, LinkedNode, SetonlyCollection, assert } from "@lch/common";
+import { LinkedList, SetonlyCollection } from "@lch/common";
 
 import "./CommentView.css";
 
@@ -8,23 +8,40 @@ import "./CommentView.css";
 
 
 
-const minRowHeight = 55;
+const minRowHeight = 40;
 
+export type RowLayoutExist = Required<RowLayout>;
 export interface RowLayout {
+  rowKey: number;
   /**
    * 行の内容を示すID
    */
-  contentId: string;
+  contentId?: string;
   /**
    * 行の上からの位置
    */
-  top: number;
+  top?: number;
 }
-function RowLayout(contentId: string, top: number): RowLayout {
-  return { contentId, top };
-}
+export const RowLayout = {
+  new: (rowKey: number, contentId?: string, top?: number): RowLayout => {
+    return { rowKey, contentId, top };
+  },
+  isExist: (value: RowLayout): value is RowLayoutExist => {
+    return value.contentId != null;
+  },
+  asExist: (value: RowLayout): RowLayoutExist => {
+    if (RowLayout.isExist(value)) return value;
 
-export type RowRender = (key: string, id: string) => JSX.Element;
+    throw new Error(`RowLayout の contentId は存在しなければなりません\n${value}`);
+  },
+  toNull: (rowLayout: RowLayout): RowLayout => {
+    rowLayout.contentId = undefined;
+    rowLayout.top = undefined;
+    return rowLayout;
+  }
+};
+
+export type RowRender = (rowKey: number, rowLayout: RowLayoutExist) => JSX.Element;
 
 export interface CommentViewBodyProps {
   rowRender: RowRender;
@@ -33,16 +50,16 @@ export interface CommentViewBodyProps {
 }
 
 export function CommentViewBody(props: CommentViewBodyProps) {
-  const state = useCommentViewBodyState(props.rowRender, props.height);
+  const state = useCommentViewBodyState(props);
   const {
-    sum,
-    rows
+    sumContentHeight
   } = state;
 
   props.stateRef.state = state;
 
   return (
     <div
+      ref={state.viewportRef}
       css={css`
       background-color: #c1eaae;
       position: relative;
@@ -53,30 +70,60 @@ export function CommentViewBody(props: CommentViewBodyProps) {
       `}
     >
       <div
+        ref={state.scrollRef}
         css={css`
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        height: ${sum}px;
+        height: ${sumContentHeight}px;
+        background: no-repeat url("https://img.freepik.com/free-photo/vertical-shot-old-fishing-boats-turned-upside-down-gloomy-sky_181624-39284.jpg?w=740&t=st=1699424432~exp=1699425032~hmac=a6e4f89a21aa022e1237485f87f7b3e654dc75adee71502f36da0f7f07fbba1c")
         `}
       />
-      <div
-        css={css`
-        position: sticky;
-        inset: 0;
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-        `}
-      >
-        {rows}
-      </div>
+      <Lineup
+        state={state}
+        rowRender={props.rowRender}
+      />
     </div>
   );
 }
 
-function Lineup() {
+interface LineupProps {
+  state: CommentViewBodyState;
+  rowRender: RowRender;
+}
+function Lineup(props: LineupProps) {
+  const {
+    sumContentHeight,
+    scrollY,
+    autoScroll,
+    rowLayouts,
+
+    addContent,
+    updateHeight,
+    scrollBy,
+    scrollTo,
+  } = props.state;
+
+  let i = 0;
+  const rows = rowLayouts.map(node =>
+    RowLayout.isExist(node.value)
+      ? (
+        <div key={node.value.rowKey}>
+          {props.rowRender(node.value.rowKey, node.value)}
+        </div>
+      ) : (
+        <div
+          css={css`
+          // background-color: #96b688;
+          height: ${minRowHeight}px;
+          top: ${i++ * minRowHeight}px;
+          `}
+          key={node.value.rowKey}
+        >
+          {`key-${node.value.rowKey}`}
+        </div>
+      ));
 
   return (
     <div
@@ -96,91 +143,105 @@ function Lineup() {
 
 
 
-export type CommentViewBodyState = ReturnType<typeof useCommentViewBodyState>;
-function useCommentViewBodyState(rowRender: RowRender, height: number) {
-  const [lastKey, setLastKey] = useState(0);
+// export type CommentViewBodyState = ReturnType<typeof useCommentViewBodyState>;
+// function useCommentViewBodyState(rowRender: RowRender, height: number) {
+//   const [lastKey, setLastKey] = useState(0);
 
-  const renderedRowCollection = useMemo(() => new SetonlyCollection<JSX.Element>(), []);
-  const { sum, upsert, getIndexFromBottom } = useElementHeightCalculator();
+//   const renderedRowCollection = useMemo(() => new SetonlyCollection<JSX.Element>(), []);
+//   const {
+//     sumContentHeight,
+//     scrollY,
+//     autoScroll,
+//     rowLayouts,
 
-  const resizeObserver = useMemo(() => new ResizeObserver(entories => {
-    for (const entory of entories) {
-      const row = entory.target as HTMLElement;
-      const { rowKey, rowId } = row.dataset;
+//     addContent,
+//     updateHeight,
+//     scrollBy,
+//     scrollTo,
+//    } = useRowLayouts(height);
 
-      assert(rowKey != null && rowId != null);
-      upsert(rowId, row.clientHeight);
-    }
-  }), [upsert]);
+//   const resizeObserver = useMemo(() => new ResizeObserver(entories => {
+//     for (const entory of entories) {
+//       const row = entory.target as HTMLElement;
+//       const { rowKey, rowId } = row.dataset;
 
-  const addRowItem = useMemo(() => (id: string) => {
-    if (sum < height) {
-      const rowKey = `${lastKey}`;
-      const row = <RowItem key={rowKey} rowKey={rowKey} id={id} resizeObserver={resizeObserver} rowRender={rowRender} />;
+//       assert(rowKey != null && rowId != null);
+//       upsert(rowId, row.clientHeight);
+//     }
+//   }), [upsert]);
 
-      renderedRowCollection.set(rowKey, row);
-      setLastKey(lastKey + 1);
-    }
+//   const addRowItem = useMemo(() => (id: string) => {
+//     if (sum < height) {
+//       const rowKey = `${lastKey}`;
+//       const row = <RowItem key={rowKey} rowKey={rowKey} id={id} resizeObserver={resizeObserver} rowRender={rowRender} />;
 
-    upsert(id, minRowHeight);
-  }, [height, lastKey, renderedRowCollection, resizeObserver, rowRender, sum, upsert]);
+//       renderedRowCollection.set(rowKey, row);
+//       setLastKey(lastKey + 1);
+//     }
 
-  const onScroll = useMemo(() => (top: number) => {
-    const { key, topOfBottomElement } = getIndexFromBottom(top, height);
+//     upsert(id, minRowHeight);
+//   }, [height, lastKey, renderedRowCollection, resizeObserver, rowRender, sum, upsert]);
 
-
-  }, [getIndexFromBottom, height]);
-
-  return {
-    sum,
-    rows: renderedRowCollection.values,
-    addRowItem,
-    onScroll
-  };
-}
-
-interface RowItemProps {
-  rowKey: string;
-  id: string;
-  resizeObserver: ResizeObserver;
-  rowRender: RowRender;
-}
-function RowItem(props: RowItemProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const current = ref.current;
-    if (current == null) return;
-    props.resizeObserver.observe(current);
-
-    return () => props.resizeObserver.unobserve(current);
-  }, [props.resizeObserver, ref]);
-
-  return (
-    <div
-      ref={ref}
-      data-row-key={props.rowKey}
-      data-row-id={props.id}
-      css={css`
-      min-height: ${minRowHeight}px;
-      `}
-    >
-      {props.rowRender(props.rowKey, props.id)}
-    </div>
-  );
-}
+//   const onScroll = useMemo(() => (top: number) => {
+//     const { key, topOfBottomElement } = getIndexFromBottom(top, height);
 
 
-const initCount = 5;
+//   }, [getIndexFromBottom, height]);
+
+//   return {
+//     sum,
+//     rows: renderedRowCollection.values,
+//     addRowItem,
+//     onScroll
+//   };
+// }
+
+// interface RowItemProps {
+//   rowKey: number;
+//   id: string;
+//   resizeObserver: ResizeObserver;
+//   rowRender: RowRender;
+// }
+// function RowItem(props: RowItemProps) {
+//   const ref = useRef<HTMLDivElement>(null);
+//   useEffect(() => {
+//     const current = ref.current;
+//     if (current == null) return;
+//     props.resizeObserver.observe(current);
+
+//     return () => props.resizeObserver.unobserve(current);
+//   }, [props.resizeObserver, ref]);
+
+//   return (
+//     <div
+//       ref={ref}
+//       data-row-key={props.rowKey}
+//       data-row-id={props.id}
+//       css={css`
+//       min-height: ${minRowHeight}px;
+//       `}
+//     >
+//       {props.rowRender(props.rowKey, props.id)}
+//     </div>
+//   );
+// }
+
+
 // const initRowLayouts = new SetonlyCollection<RowLayout, number>(
 //   reduceFromRange(0, initCount, i => ({ key: i, value: { contentId: null, top: 0 } })));
-const initRowLayouts = new LinkedList<RowLayout | null>(
-  null, null, null, null, null
+const initRowLayouts = new LinkedList<RowLayout>(
+  RowLayout.new(0),
+  RowLayout.new(1),
 );
 
-function useRowLayouts(viewportHeight_: number) {
+export type CommentViewBodyState = ReturnType<typeof useCommentViewBodyState>;
+function useCommentViewBodyState(props: CommentViewBodyProps) {
   const [, refresh] = useState(0);
 
-  const viewportHeightRef = useRef(viewportHeight_);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const viewportHeightRef = useRef(props.height);
   // const [sumContentHeight, setSumContentHeight] = useState(0);
   // const [scrollY, setScrollY] = useState(0);
   // const [autoScroll, setAutoScroll] = useState(true);
@@ -188,16 +249,53 @@ function useRowLayouts(viewportHeight_: number) {
   const scrollYRef = useRef(0);
   const autoScrollRef = useRef(true);
 
-  // const [nextRowKey, setNextRowKey] = useState(initCount);
   const rowLayouts = useMemo(() => initRowLayouts, []);
   /** { contentId: `contentId` の行の描画後の高さ }[] */
   const rowHeights = useMemo(() => new SetonlyCollection<number>(), []);
 
+
+
   // ビューの高さが変わった場合色々と再計算する
   useEffect(() => {
-    viewportHeightRef.current = viewportHeight_;
+    viewportHeightRef.current = props.height;
 
-  }, [viewportHeight_]);
+    rowLayouts.first = { value: RowLayout.new(0) };
+    rowLayouts.last = rowLayouts.first;
+
+    const rowLayoutCount = props.height / minRowHeight + 2;
+    for (let rowKey = 1; rowKey < rowLayoutCount; rowKey++) {
+      const oldLast = rowLayouts.last;
+      rowLayouts.last = { value: RowLayout.new(rowKey), before: oldLast };
+      oldLast.next = rowLayouts.last;
+    }
+  }, [rowLayouts, props.height]);
+
+  // スクロールイベントによる rowLayouts の更新
+  useEffect(() => {
+    const scroll = scrollRef.current;
+    if (scroll == null) return;
+
+    const scrollEvent = (_e: Event) => {
+      //
+    };
+
+    scroll.addEventListener("scroll", scrollEvent);
+    return () => scroll.removeEventListener("scroll", scrollEvent);
+  }, []);
+
+  // コメント追加時の自動スクロール
+
+  const autoScroll = useCallback(
+    (toY: number | "bottom") => {
+      const viewport = viewportRef.current;
+      const scroll = scrollRef.current;
+      if (viewport == null || scroll == null) return;
+
+      if (toY === "bottom")
+    
+  }, []);
+
+
 
   const addContent = useCallback((contentId: string, height: number) => {
     rowHeights.set(contentId, height);
@@ -206,17 +304,32 @@ function useRowLayouts(viewportHeight_: number) {
 
     if (autoScrollRef.current) {
       let last = rowLayouts.first;
+      let moveLastNodes = 0;
 
       for (const node of rowLayouts) {
-        if (node.value == null) break;
-        last = node;
+        if (!RowLayout.isExist(node.value)) break;
+        // if (node.value.contentId == null) break;
+        last = node.next!;
 
-        last.value!.top -= height;
-        // TODO: top + layout.height が 0 以下なら空にして下に移動する
+        node.value.top -= height;
+        const rowHeight = rowHeights.getValue(node.value.contentId);
+
+        // top + layout.height が 0 以下なら空にして下に移動する
+        if (node.value.top + rowHeight < 0) {
+          moveLastNodes += 1;
+        }
       }
 
-      // last.value == null は保証されている
-      last.value = { contentId, top: viewportHeightRef.current - height };
+      // top + layout.height が 0 以下なら空にして下に移動する
+      for (let i = 0; i < moveLastNodes; i++) {
+        RowLayout.toNull(rowLayouts.first.value);
+        rowLayouts.moveFirstToLast();
+      }
+
+      // // last.value == null は保証されている
+      // last.value = { contentId, top: viewportHeightRef.current - height };
+      last.value.contentId = contentId;
+      last.value.top = viewportHeightRef.current - height;
     }
 
     refresh(x => ~x);
@@ -234,120 +347,131 @@ function useRowLayouts(viewportHeight_: number) {
   // 仮仕様: ScrollBy では一度に１行分を超えるスクロールはないと仮定する
   //         １行分を超えるのスクロールも実装できるが、無駄な計算が多くなってしまう
   //         それなら ScrollTo を使ったほうが効率的である
-  const scrollBy = useCallback((byY: number) => {
-    if (rowLayouts.first.value == null || byY === 0) return;
-    // 一番上の行の top が 1 以上の場合は viewport を満たすほどの行が存在しないということ
-    // つまりスクロール出来るはずがない
-    if (rowLayouts.first.value.top > 0) return;
+  // const scrollBy = useCallback((byY: number) => {
+  //   if (!RowLayout.isExist(rowLayouts.first.value) || byY === 0) return;
+  //   // if (rowLayouts.first.value.contentId == null || byY === 0) return;
+  //   // 一番上の行の top が 1 以上の場合は viewport を満たすほどの行が存在しないということ
+  //   // つまりスクロール出来るはずがない
+  //   if (rowLayouts.first.value.top > 0) return;
 
-    const viewportHeight = viewportHeightRef.current;
+  //   const viewportHeight = viewportHeightRef.current;
 
-    // TODO: 実際は見える範囲より少し多めに範囲を取り、その範囲内の行を実体化する
+  //   // TODO: 実際は見える範囲より少し多めに範囲を取り、その範囲内の行を実体化する
 
-    // マウスホイールは下方向が PLUS なのでこうする
-    if (byY > 0) {
-      // スクロールバー/ホイールで下方向 (下の行が見える方向へのスクロール)
-      // この行以降の `(undefined?)!` の部分は絶対に問題ないと保証されている
-      const lastRowLayoutNode = rowLayouts.find(node => node.next!.value == null)!;
-      const lastRowLayout = lastRowLayoutNode.value!;
-      const lastContentId = lastRowLayout.contentId;
-      const lastContentHeight = rowHeights.getValue(lastContentId);
-      const lastContentBottom = (lastRowLayout.top - byY) + lastContentHeight;
+  //   // マウスホイールは下方向が PLUS なのでこうする
+  //   if (byY > 0) {
+  //     // スクロールバー/ホイールで下方向 (下の行が見える方向へのスクロール)
+  //     const lastRowLayoutNode = rowLayouts.find(node => node.next!.value.contentId == null)!;
+  //     const lastRowLayout = RowLayout.asExist(lastRowLayoutNode.value);
+  //     const lastContentId = lastRowLayout.contentId;
+  //     const lastContentHeight = rowHeights.getValue(lastContentId);
+  //     const lastContentBottom = (lastRowLayout.top - byY) + lastContentHeight;
 
-      if (lastContentBottom < viewportHeight) {
-        // スクロールした結果新しい行を実体化する
-        const newLastContentIndex = rowHeights.keyIndexes[lastContentId] + 1;
+  //     if (lastContentBottom < viewportHeight) {
+  //       // スクロールした結果新しい行を実体化する
+  //       const newLastContentIndex = rowHeights.keyIndexes[lastContentId] + 1;
 
-        if (newLastContentIndex < rowHeights.length) {
-          // 新しい行を表示する
-          const newLastContentId = rowHeights.keys[newLastContentIndex];
-          // 本当は lastContentBottom でいいがこの後に rowLayouts の中の高さを一括で変更するのでこの値にする
-          lastRowLayoutNode.next!.value = {
-            contentId: newLastContentId,
-            top: lastRowLayout.top + lastContentHeight,
-          };
+  //       if (newLastContentIndex < rowHeights.length) {
+  //         // 新しい行を表示する
+  //         const newLastContentId = rowHeights.keys[newLastContentIndex];
+  //         // 本当は lastContentBottom でいいがこの後に rowLayouts の中の高さを一括で変更するのでこの値にする
+  //         lastRowLayoutNode.next!.value.contentId = newLastContentId;
+  //         lastRowLayoutNode.next!.value.top = lastRowLayout.top + lastContentHeight;
+  //         // lastRowLayoutNode.next!.value = {
+  //         //   contentId: newLastContentId,
+  //         //   top: lastRowLayout.top + lastContentHeight,
+  //         // };
 
-          // スクロールして範囲外に出た場合
-          const firstRowLayoutNode = rowLayouts.first;
-          const firstRowLayout = firstRowLayoutNode.value!;
-          const firstContentHeight = rowHeights.getValue(firstRowLayout.contentId);
+  //         // スクロールして範囲外に出た場合
+  //         const firstRowLayoutNode = rowLayouts.first;
+  //         const firstRowLayout = RowLayout.asExist(firstRowLayoutNode.value);
+  //         // const firstRowLayout = firstRowLayoutNode.value!;
+  //         const firstContentHeight = rowHeights.getValue(firstRowLayout.contentId);
 
-          if (firstRowLayout.top - byY + firstContentHeight <= 0) {
-            // 範囲外に出た分をゴニョゴニョ
-            firstRowLayoutNode.value = null;
-            // firstRowLayoutNode.value.top = 0;
+  //         if (firstRowLayout.top - byY + firstContentHeight <= 0) {
+  //           // 範囲外に出た分をゴニョゴニョ
+  //           RowLayout.toNull(firstRowLayoutNode.value);
+  //           // firstRowLayoutNode.value = null;
+  //           // firstRowLayoutNode.value.top = 0;
 
-            // 下方向スクロールではみ出した場合は上のノードを下に持っていく
-            // rowLayouts.moveFirstToLast();  // TODO: なんでコレコメントアウト？だめじゃない？
-          }
-        } else {
-          // 新しく表示するコンテンツがなければスクロールも巻き戻る
-          byY -= viewportHeight - lastContentBottom;
-          if (byY === 0) return;
-        }
-      }
+  //           // 下方向スクロールではみ出した場合は上のノードを下に持っていく
+  //           // rowLayouts.moveFirstToLast();  // TODO: なんでコレコメントアウト？だめじゃない？
+  //         }
+  //       } else {
+  //         // 新しく表示するコンテンツがなければスクロールも巻き戻る
+  //         byY -= viewportHeight - lastContentBottom;
+  //         if (byY === 0) return;
+  //       }
+  //     }
 
-      for (const node of rowLayouts) {
-        if (node.value == null) break;
-        node.value.top -= byY;
-      }
-    } else {
-      // スクロールバー/ホイールで上方向 (上の行が見える方向へのスクロール)
+  //     for (const node of rowLayouts) {
+  //       if (!RowLayout.isExist(node.value)) break;
+  //       // if (node.value.contentId == null) break;
+  //       node.value.top -= byY;
+  //     }
+  //   } else {
+  //     // スクロールバー/ホイールで上方向 (上の行が見える方向へのスクロール)
 
-      // この行以降の `(undefined?)!` の部分は絶対に問題ないと保証されている
-      const firstRowLayoutNode = rowLayouts.first;
-      const firstRowLayout = firstRowLayoutNode.value!;
-      const firstContentId = firstRowLayout.contentId;
-      // const firstContentHeight = rowHeights.getValue(firstContentId);
-      const firstContentTop = (firstRowLayout.top - byY);
+  //     const firstRowLayoutNode = rowLayouts.first;
+  //     const firstRowLayout = RowLayout.asExist(firstRowLayoutNode.value);
+  //     const firstContentId = firstRowLayout.contentId;
+  //     // const firstContentHeight = rowHeights.getValue(firstContentId);
+  //     const firstContentTop = (firstRowLayout.top - byY);
 
-      if (firstContentTop > 0) {
-        // スクロールした結果新しい行を実体化する
-        const newFirstContentIndex = rowHeights.keyIndexes[firstContentId] - 1;
+  //     if (firstContentTop > 0) {
+  //       // スクロールした結果新しい行を実体化する
+  //       const newFirstContentIndex = rowHeights.keyIndexes[firstContentId] - 1;
 
-        // スクロールして範囲外に出た場合
-        const lastRowLayoutNode = rowLayouts.find(node => node.next!.value == null)!;
-        const lastRowLayout = lastRowLayoutNode.value!;
-        // const lastContentId = lastRowLayout.contentId!;
-        // const lastContentHeight = rowHeights.getValue(lastContentId);
+  //       // スクロールして範囲外に出た場合
+  //       const lastRowLayoutNode = rowLayouts.find(node => node.next!.value == null)!;
+  //       const lastRowLayout = RowLayout.asExist(lastRowLayoutNode.value);
+  //       // const lastContentId = lastRowLayout.contentId!;
+  //       // const lastContentHeight = rowHeights.getValue(lastContentId);
 
-        if (lastRowLayout.top - byY >= viewportHeight) {
-          // 範囲外に出た分をゴニョゴニョ
-          lastRowLayoutNode.value = null;
-        }
+  //       if (lastRowLayout.top - byY >= viewportHeight) {
+  //         // 範囲外に出た分をゴニョゴニョ
+  //         RowLayout.toNull(lastRowLayoutNode.value);
+  //         // lastRowLayoutNode.value = null;
+  //       }
 
-        if (newFirstContentIndex !== -1) {
-          // 新しい行を表示する
-          const newFirstContentId = rowHeights.keys[newFirstContentIndex];
-          const newFirstContentHeight = rowHeights.getValue(newFirstContentId);
-          const newFirstRowLayoutNode = rowLayouts.last;
-          // 本当は lastContentTop でいいがこの後に rowLayouts の中の高さを一括で変更するのでこの値にする
-          newFirstRowLayoutNode.value = {
-            contentId: newFirstContentId,
-            top: firstRowLayout.top - newFirstContentHeight,
-          };
+  //       if (newFirstContentIndex !== -1) {
+  //         // 新しい行を表示する
+  //         const newFirstContentId = rowHeights.keys[newFirstContentIndex];
+  //         const newFirstContentHeight = rowHeights.getValue(newFirstContentId);
+  //         const newFirstRowLayoutNode = rowLayouts.last;
+  //         // 本当は lastContentTop でいいがこの後に rowLayouts の中の高さを一括で変更するのでこの値にする
+  //         newFirstRowLayoutNode.value.contentId = newFirstContentId;
+  //         newFirstRowLayoutNode.value.top = firstRowLayout.top - newFirstContentHeight;
+  //         // newFirstRowLayoutNode.value = {
+  //         //   rowKey: newFirstRowLayoutNode.value.rowKey,
+  //         //   contentId: newFirstContentId,
+  //         //   top: firstRowLayout.top - newFirstContentHeight,
+  //         // };
 
-          // 上方向スクロールで追加する場合は下のノードを上に持ってくる
-          rowLayouts.moveLastToFirst();
-        } else {
-          // 新しく表示するコンテンツがなければスクロールも巻き戻る
-          byY = -firstContentTop;
-          if (byY === 0) return;
-        }
-      }
+  //         // 上方向スクロールで追加する場合は下のノードを上に持ってくる
+  //         rowLayouts.moveLastToFirst();
+  //       } else {
+  //         // 新しく表示するコンテンツがなければスクロールも巻き戻る
+  //         byY = -firstContentTop;
+  //         if (byY === 0) return;
+  //       }
+  //     }
 
-      for (const node of rowLayouts) {
-        if (node.value == null) break;
-        node.value.top -= byY;
-      }
-    }
+  //     for (const node of rowLayouts) {
+  //       if (!RowLayout.isExist(node.value)) break;
+  //       // if (node.value == null) break;
+  //       node.value.top -= byY;
+  //     }
+  //   }
 
-    // setScrollY(oldValue => oldValue + byY);
-    scrollYRef.current += byY;
+  //   // setScrollY(oldValue => oldValue + byY);
+  //   scrollYRef.current += byY;
 
-    refresh(x => ~x);
-  }, [rowLayouts, rowHeights]);
+  //   refresh(x => ~x);
+  // }, [rowLayouts, rowHeights]);
 
+  ;
+  // const scrollTo = useCallback((toY: number) => {
   const scrollTo = useCallback((toY: number) => {
     const sumContentHeight = sumContentHeightRef.current;
     const viewportHeight = viewportHeightRef.current;
@@ -373,11 +497,18 @@ function useRowLayouts(viewportHeight_: number) {
       // top = newTop;
     }
 
-    rowLayouts.first = {
-      value: { contentId: rowHeights.keys[contentIndex], top }
-    };
+    rowLayouts.first.value.contentId = rowHeights.keys[contentIndex];
+    rowLayouts.first.value.top = top;
+    // rowLayouts.first = {
+    //   value: {
+    //     rowKey: rowLayouts.first.value.rowKey,
+    //     contentId: rowHeights.keys[contentIndex],
+    //     top
+    //   }
+    // };
     rowLayouts.last = rowLayouts.first;
     let setedLayoutCount = 1;
+
     // ビューポートを埋める (かコンテンツが尽きる) まで行に追加
     while (true) {
       contentIndex += 1;
@@ -388,10 +519,12 @@ function useRowLayouts(viewportHeight_: number) {
 
       setedLayoutCount += 1;
       const oldLastNode = rowLayouts.last;
-      rowLayouts.last = {
-        value: { contentId: rowHeights.keys[contentIndex], top },
-        before: oldLastNode,
-      };
+      rowLayouts.last.value.contentId = rowHeights.keys[contentIndex];
+      rowLayouts.last.value.top = top;
+      // rowLayouts.last = {
+      //   value: { contentId: rowHeights.keys[contentIndex], top },
+      //   before: oldLastNode,
+      // };
       oldLastNode.next = rowLayouts.last;
     }
 
@@ -399,7 +532,8 @@ function useRowLayouts(viewportHeight_: number) {
     const rowLayoutCount = Math.floor(viewportHeight / minRowHeight);
     for (let i = setedLayoutCount; i < rowLayoutCount; i++) {
       const oldLastNode = rowLayouts.last;
-      rowLayouts.last = { value: null, before: oldLastNode };
+      RowLayout.toNull(rowLayouts.last.value);
+      // rowLayouts.last = { value: null, before: oldLastNode };
       oldLastNode.next = rowLayouts.last;
     }
 
@@ -408,7 +542,6 @@ function useRowLayouts(viewportHeight_: number) {
 
     refresh(x => ~x);
   }, [rowLayouts, rowHeights]);
-
 
   // const getIndexFromBottom = useCallback((scrollTop: number): { key: number, topOfBottomElement: number; } => {
   //   let sum = -scrollTop;
@@ -423,9 +556,17 @@ function useRowLayouts(viewportHeight_: number) {
   // }, [heihgtCollection]);
 
   return {
-    sum: sumContentHeight,
-    upsert,
-    getIndexFromBottom
+    viewportRef,
+    scrollRef,
+    sumContentHeight: sumContentHeightRef.current,
+    scrollY: scrollYRef.current,
+    autoScroll: autoScrollRef.current,
+    rowLayouts: rowLayouts,
+
+    addContent,
+    updateHeight,
+    scrollBy,
+    scrollTo,
   };
 }
 
