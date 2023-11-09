@@ -3,38 +3,36 @@ import { nanoid } from "nanoid";
 import { useMemo } from "react";
 import { useWidnowWidth } from "../hooks/useWidnowWidth";
 import { useAppSelector } from "../store";
-import { CommentViewBody, RowRender } from "./CommentViewBody";
-import { CommentViewBodyState } from "./CommentViewBodyState";
+import { VirtualList, RowRender, VirtualListState } from "./VirtualList";
 import { CommentViewHeader } from "./CommentViewHeader";
 
 import "./CommentView.css";
 
 export * from "./CommentViewHeader";
-export * from "./CommentViewBody";
 
+export interface CommentViewProps {
+  height: number;
+}
 
-export function CommentView() {
+let contentId = 0;
+export function CommentView(props: CommentViewProps) {
   const headerWidth = useWidnowWidth();
   const realityColumns = useAppSelector(state => state.header.columns)
     .map(x => x.width);
   const tempColumns = useAppSelector(state => state.header.columnsTemp)
     ?.map(x => x.width);
 
-  const r = useMemo(() => ({ state: (null!) as CommentViewBodyState }), []);
+  const r = useMemo(() => ({ state: (null!) as VirtualListState }), []);
 
   return (
     <div>
-      <div
-        css={css`
-        display: flex;
-        flex-flow: column;
-        `}>
+      <div className="comment-view-body">
         <CommentViewHeader
           width={headerWidth}
           height={50}
         />
-        <CommentViewBody
-          height={450}
+        <VirtualList
+          height={props.height}
           rowRender={rowRender}
           stateRef={r}
         />
@@ -43,7 +41,21 @@ export function CommentView() {
       <div>
         <input type="number" id="input_text" />
         <button onClick={() => {
-          r?.state?.addContent(nanoid(), 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
+          r?.state?.addContent(`${contentId++}`, 40);
         }}>追加</button>
         <div>
           {Math.random()}
@@ -60,11 +72,7 @@ export function CommentView() {
 }
 
 const rowRender: RowRender = ({ rowLayout }) => (
-  <div
-    css={css`
-    background-color: #b7e8fd;
-    `}
-  >
+  <div className="comment-view-item"  >
     {`key-${rowLayout.rowKey} / id-${rowLayout.contentId}`}
   </div>
 );

@@ -1,7 +1,6 @@
 import { LinkedList, SetonlyCollection } from "@lch/common";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
-import { MIN_ROW_HEIGHT } from "./CommentViewBody";
-
+import { MIN_ROW_HEIGHT } from "./VirtualList";
 
 export type RowLayout = Required<RowLayoutAny>;
 export interface RowLayoutAny {
@@ -32,9 +31,9 @@ export const RowLayout = {
 
 
 
-export type CommentViewBodyState = ReturnType<typeof useCommentViewBodyState>;
+export type VirtualListState = ReturnType<typeof useVirtualListState>;
 
-export function useCommentViewBodyState(propHeight: number) {
+export function useVirtualListState(propHeight: number) {
   const [refreshKey, refresh] = useState(0);
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -42,35 +41,19 @@ export function useCommentViewBodyState(propHeight: number) {
 
   const viewportHeightRef = useRef(propHeight);
   const sumContentHeightRef = useRef(0);
+  const rowCountRef = useRef(10);
   const rowTopRef = useRef(0);
 
-  const rowLayouts = useMemo(createRowLayouts, []);
+  const rowLayouts = useMemo<LinkedList<RowLayoutAny>>(createRowLayouts, []);
   /** { contentId: `contentId` の行の描画後の高さ }[] */
   const rowHeights = useMemo(() => new SetonlyCollection<number>(), []);
-
-  // ビューの高さが変わった場合色々と再計算する
-  useEffect(() => {
-    viewportHeightRef.current = propHeight;
-
-    rowLayouts.first = { value: RowLayout.new(0) };
-    rowLayouts.last = rowLayouts.first;
-
-    const rowLayoutCount = Math.floor(propHeight / MIN_ROW_HEIGHT) + 2;
-    for (let rowKey = 1; rowKey < rowLayoutCount; rowKey++) {
-      const oldLast = rowLayouts.last;
-      rowLayouts.last = { value: RowLayout.new(rowKey), before: oldLast };
-      oldLast.next = rowLayouts.last;
-    }
-    // ここは propHeight でないとダメ
-  }, [rowLayouts, propHeight]);
-
 
   const updateHeight = useCallback((contentId: string, height: number) => {
     rowHeights.set(contentId, height);
     const oldValue = rowHeights.getValue(contentId);
     sumContentHeightRef.current += height - oldValue;
 
-    refresh(x => ~x);
+    refresh(x => x + 1);
   }, [rowHeights]);
 
   const refreshRowLayout = useCallback(() => {
@@ -81,6 +64,7 @@ export function useCommentViewBodyState(propHeight: number) {
 
     let contentIndex = 0;
     let rowTop = viewport.scrollTop;
+
     for (; contentIndex < rowHeights.length; contentIndex++) {
       const height = rowHeights.values[contentIndex];
       const newTop = rowTop - height;
@@ -90,11 +74,9 @@ export function useCommentViewBodyState(propHeight: number) {
 
     rowTopRef.current = -rowTop;
 
-    const rowLayoutCount = Math.floor(viewportHeight / MIN_ROW_HEIGHT) + 2;
-
     rowTop += viewportHeight;
     for (const node of rowLayouts) {
-      const rowKey = contentIndex % rowLayoutCount;
+      const rowKey = contentIndex % rowCountRef.current;
 
       node.value.rowKey = rowKey;
 
@@ -108,7 +90,7 @@ export function useCommentViewBodyState(propHeight: number) {
       contentIndex += 1;
     }
 
-    refresh(x => ~x);
+    refresh(x => x + 1);
   }, [rowLayouts, rowHeights]);
 
   const scrollTo = useCallback((toY: number | "bottom") => {
@@ -123,7 +105,7 @@ export function useCommentViewBodyState(propHeight: number) {
 
     refreshRowLayout();
 
-    refresh(x => ~x);
+    refresh(x => x + 1);
   }, [refreshRowLayout]);
 
   const addContent = useCallback((contentId: string, height: number) => {
@@ -141,9 +123,67 @@ export function useCommentViewBodyState(propHeight: number) {
     const isAutoScroll = bottom <= viewport.scrollTop;
     if (isAutoScroll) scrollTo("bottom");
 
-    refresh(x => ~x);   // scrollTo が実行されたとしても必要
+    refresh(x => x + 1);   // scrollTo が実行されたとしても必要
   }, [rowHeights, scrollTo]);
 
+
+  // ビューの高さが変わった場合色々と再計算する
+  useEffect(
+    () => {
+      const viewport = viewportRef.current!;
+
+      let heightDiff = propHeight - viewportHeightRef.current;
+
+      /*
+       * 実際の HTML Element の値を変える順序が大切
+       * 今回は「ビューポートの高さ > スクロール位置」の順で変更する
+       * そのため以下の場合にズレるので、ズレる差分だけ調整する必要がある
+       */
+
+      if (heightDiff > 0) {
+        const XXX = (viewport.scrollTop + propHeight) - sumContentHeightRef.current;
+        if (XXX > 0) {
+          heightDiff -= XXX;
+        }
+      }
+
+
+      viewportHeightRef.current = propHeight;
+      rowTopRef.current += heightDiff;
+
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // const oldViewEleHeight = viewport.style.height;
+
+      viewport.style.height = `${propHeight}px`;
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // const oldScrollTop = viewport.scrollTop;
+      viewport.scrollTop -= heightDiff;
+
+
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // console.log(`${oldScrollTop} - ${viewport.scrollTop} = `, oldScrollTop - viewport.scrollTop);
+      // console.log(`viewport height   :   old: ${oldViewEleHeight}   ${viewport.style.height}   dif: ${heightDiff}`);
+      // console.log(`viewport scrollTop:   old: ${oldScrollTop}   ${viewport.scrollTop}`);
+
+      rowLayouts.first = { value: RowLayout.new(0) };
+      rowLayouts.last = rowLayouts.first;
+
+      const rowLayoutCount = Math.floor(propHeight / MIN_ROW_HEIGHT) + 2;
+      if (rowLayoutCount > rowCountRef.current) {
+        rowCountRef.current = rowLayoutCount;
+      }
+
+      for (let rowKey = 1; rowKey < rowCountRef.current; rowKey++) {
+        const oldLast = rowLayouts.last;
+        rowLayouts.last = { value: RowLayout.new(rowKey), before: oldLast };
+        oldLast.next = rowLayouts.last;
+      }
+
+      refreshRowLayout();
+      refresh(x => x + 1);
+    },
+    // ここは propHeight でないとダメ
+    [rowLayouts, refreshRowLayout, propHeight]);
 
   // スクロールイベントによる rowLayouts の更新
   useEffect(() => {
@@ -152,13 +192,11 @@ export function useCommentViewBodyState(propHeight: number) {
     if (viewport == null || scroll == null) return;
 
     const scrollEvent = (_e: Event) => {
-      console.log("scroll", viewport.scrollTop);
-
       scrollTo(viewport.scrollTop);
-      refresh(x => ~x);
+      refresh(x => x + 1);
     };
 
-    viewport.addEventListener("scroll", scrollEvent);
+    viewport.addEventListener("scroll", scrollEvent, { passive: true });
     return () => viewport.removeEventListener("scroll", scrollEvent);
   }, [scrollTo]);
 

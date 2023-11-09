@@ -195,5 +195,19 @@ function IndexComponent() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TestComponent() {
-  return <CommentView />;
+  const [height, setHeight] = useState(0);
+
+  return (
+    <div>
+      <CommentView
+        height={400 + height}
+      />
+
+      <div>
+        <input type="range" min="0" max="500" onChange={e =>
+          setHeight(Number(e.target.value))
+        } />
+      </div>
+    </div>
+  );
 }

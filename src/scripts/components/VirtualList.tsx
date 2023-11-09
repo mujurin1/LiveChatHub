@@ -1,35 +1,32 @@
 import { css } from "@emotion/react";
-import { CommentViewBodyState, RowLayout, useCommentViewBodyState } from "./CommentViewBodyState";
+import { VirtualListState, RowLayout, useVirtualListState } from "./VirtualListState";
 
-export * from "./CommentViewBodyState";
+import "./VirtualList.css";
 
+export * from "./VirtualListState";
 
 export type RowRender = (props: { rowLayout: RowLayout; }) => JSX.Element;
 
-
 export const MIN_ROW_HEIGHT = 40;
 
-export interface CommentViewBodyProps {
+export interface VirtualListProps {
   rowRender: RowRender;
   height: number;
-  stateRef: { state: CommentViewBodyState; };
+  stateRef: { state: VirtualListState; };
 }
 
-export function CommentViewBody(props: CommentViewBodyProps) {
-  const state = useCommentViewBodyState(props.height);
+export function VirtualList(props: VirtualListProps) {
+  const state = useVirtualListState(props.height);
 
   props.stateRef.state = state;
 
   return (
     <div
+      className="virtual-list"
       ref={state.viewportRef}
-      className="comment-view-body"
-      css={css`
-      height: ${props.height}px;
-      `}
     >
       <div
-        className="comment-view-body-scroll"
+        className="virtual-list-scroll"
         ref={state.scrollRef}
       />
       <Lineup
@@ -43,7 +40,7 @@ export function CommentViewBody(props: CommentViewBodyProps) {
 
 
 interface LineupProps {
-  state: CommentViewBodyState;
+  state: VirtualListState;
   rowRender: RowRender;
 }
 
@@ -64,7 +61,7 @@ function Lineup(props: LineupProps) {
   const rows = rowLayouts.map(node => (
     <div
       key={node.value.rowKey}
-      className="comment-view-body-row"
+      className="virtual-list-row"
       css={css`
           top: ${rowTop}px;
           `}
@@ -76,7 +73,7 @@ function Lineup(props: LineupProps) {
   ));
 
   return (
-    <div className="comment-view-body-lineup">
+    <div className="virtual-list-lineup">
       {rows}
     </div>
   );

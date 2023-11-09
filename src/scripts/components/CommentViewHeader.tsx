@@ -1,12 +1,9 @@
-
 import { useState, useCallback, useEffect } from "react";
 import React from "react";
 import { css } from "@emotion/react";
 import { useDispatch } from "react-redux";
 import { setColumnsTemp, setWidth, setWidthAndFlexWidth } from "../slices/headerSlice";
 import { useAppSelector } from "../store";
-
-import "./CommentView.css";
 
 const minWidth = 20;
 
