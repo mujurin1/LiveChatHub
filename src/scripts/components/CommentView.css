@@ -1,3 +1,20 @@
+/* #region Comment View Header */
+.comment-view-header {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  background-color: #ccc;
+}
+
+.comment-view-header-item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  user-select: none;
+}
+
 .comment-view-header-item-content {
   font-size: 18px;
   overflow: hidden;
@@ -24,3 +41,36 @@
   z-index: 1;
   height: 100%;
 }
+
+/* #endregion Comment View Header */
+
+/* #region Comment View Body */
+.comment-view-body {
+  background-color: #c1eaae;
+  position: relative;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.comment-view-body-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: no-repeat url("https://img.freepik.com/free-photo/vertical-shot-old-fishing-boats-turned-upside-down-gloomy-sky_181624-39284.jpg?w=740&t=st=1699424432~exp=1699425032~hmac=a6e4f89a21aa022e1237485f87f7b3e654dc75adee71502f36da0f7f07fbba1c")
+}
+
+.comment-view-body-lineup {
+  position: sticky;
+  inset: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.comment-view-body-row {
+  height: 40px;
+  position: relative;
+}
+
+/* #endregion Comment View Header */

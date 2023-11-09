@@ -1,16 +1,12 @@
 import { createRoot } from "react-dom/client";
 import { Button, Dialog, css } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Provider } from "react-redux";
-import { CommentView } from "./CommentView";
+import { CommentView } from "./components/CommentView";
 import { Connection } from "./components_/Connection";
 import { LiveError } from "./definition/model/LiveError";
 import { dep } from "./service/dep";
-import { CommentViewHeader } from "./components/CommentViewHeader";
-import { CommentViewBody, CommentViewBodyState, RowRender } from "./components/CommentViewBody";
-import { useWidnowWidth } from "./hooks/useWidnowWidth";
-import { store, useAppSelector } from "./store";
-import { nanoid } from "@reduxjs/toolkit";
+import { store } from "./store";
 
 import "../styles/index.css";
 
@@ -27,6 +23,7 @@ createRoot(document.getElementById("root")!)
 
 
 const viewportHeight = 400;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function XComponent() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollObjRef = useRef<HTMLImageElement>(null);
@@ -198,58 +195,5 @@ function IndexComponent() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TestComponent() {
-  const headerWidth = useWidnowWidth();
-  const realityColumns = useAppSelector(state => state.header.columns)
-    .map(x => x.width);
-  const tempColumns = useAppSelector(state => state.header.columnsTemp)
-    ?.map(x => x.width);
-
-  const r = useMemo(() => ({ state: (null!) as CommentViewBodyState }), []);
-
-  const [x, set] = useState(0);
-
-  return (
-    <div>
-      <div
-        css={css`
-        display: flex;
-        flex-flow: column;
-        // height: 450px;
-        `}>
-        <CommentViewHeader
-          width={headerWidth}
-          height={50}
-        />
-        <CommentViewBody
-          height={450}
-          rowRender={rowRender}
-          stateRef={r}
-        />
-      </div>
-
-      <div>
-        <input type="number" id="input_text" />
-        <button onClick={() => {
-          r?.state?.addContent(nanoid(), 40);
-          // r?.state?.addContent(nanoid(), +input_text.value);
-          set(x => x + 1);
-        }}>追加</button>
-        <div>
-          {Math.random()}
-        </div>
-      </div>
-
-      <div style={{ fontSize: 32 }}>
-        <div>realityColumns: {realityColumns.join()}</div>
-        <div>tempColumns: {tempColumns?.join() ?? "null"}</div>
-      </div>
-
-    </div>
-  );
+  return <CommentView />;
 }
-
-const rowRender: RowRender = ({ rowLayout }) => (
-  <>
-    {`key-${rowLayout.rowKey} / id-${rowLayout.contentId}`}
-  </>
-);

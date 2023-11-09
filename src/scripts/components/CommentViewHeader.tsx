@@ -30,10 +30,6 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
     <div
       className="comment-view-header"
       css={css`
-      display: flex;
-      align-items: center;
-      text-align: center;
-      background-color: #ccc;
       height: ${props.height}px;
       `}
     >
@@ -42,13 +38,7 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
           key={column.type}
           className="comment-view-header-item"
           css={css`
-          position: relative;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100%;
           width: ${column.width}px;
-          user-select: none;
           min-width: ${minWidth}px;
           `}
         >
