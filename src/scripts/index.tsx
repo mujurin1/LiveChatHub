@@ -206,7 +206,6 @@ function TestComponent() {
 
   const r = useMemo(() => ({ state: (null!) as CommentViewBodyState }), []);
 
-  const [, set] = useState(0);
 
   return (
     <div>
@@ -232,10 +231,9 @@ function TestComponent() {
         <button onClick={() => {
           r?.state?.addContent(nanoid(), 40);
           // r?.state?.addContent(nanoid(), +input_text.value);
-          set(x => ~x);
         }}>追加</button>
         <div>
-          全体の高さ: {r?.state?.sumContentHeight ?? "?"}
+          {Math.random()}
         </div>
       </div>
 
@@ -248,17 +246,8 @@ function TestComponent() {
   );
 }
 
-const rowRender: RowRender = (key, rowLayout) => (
-  <div
-    css={css`
-    background-color: #b7e8fd;
-    height: 40px;
-    top: ${rowLayout.top}px;
-    left: 100px;
-    // position: relative;
-    position: absolute;
-    `}
-  >
-    {`key-${key} / id-${rowLayout.contentId}`}
-  </div>
+const rowRender: RowRender = ({ rowLayout }) => (
+  <>
+    {`key-${rowLayout.rowKey} / id-${rowLayout.contentId}`}
+  </>
 );

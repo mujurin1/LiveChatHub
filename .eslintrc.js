@@ -49,9 +49,12 @@ module.exports = {
             "caughtErrorsIgnorePattern": "^_"
           }
         ],
-        "no-constant-condition": ["error", { "checkLoops": false }],
         "@typescript-eslint/no-base-to-string": "off",
         "@typescript-eslint/restrict-template-expressions": "off",
+        "no-constant-condition": ["error", { "checkLoops": false }],
+        "no-empty": "off",
+        "prefer-const": "warn",
+        "no-debugger": "warn",
       },
     },
     {
