@@ -10,9 +10,9 @@ import { CommentViewHeader } from "./components/CommentViewHeader";
 import { CommentViewBody, CommentViewBodyState, RowRender } from "./components/CommentViewBody";
 import { useWidnowWidth } from "./hooks/useWidnowWidth";
 import { store, useAppSelector } from "./store";
+import { nanoid } from "@reduxjs/toolkit";
 
 import "../styles/index.css";
-import { nanoid } from "@reduxjs/toolkit";
 
 createRoot(document.getElementById("root")!)
   .render(
@@ -206,6 +206,7 @@ function TestComponent() {
 
   const r = useMemo(() => ({ state: (null!) as CommentViewBodyState }), []);
 
+  const [x, set] = useState(0);
 
   return (
     <div>
@@ -231,6 +232,7 @@ function TestComponent() {
         <button onClick={() => {
           r?.state?.addContent(nanoid(), 40);
           // r?.state?.addContent(nanoid(), +input_text.value);
+          set(x => x + 1);
         }}>追加</button>
         <div>
           {Math.random()}
