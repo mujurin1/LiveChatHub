@@ -115,15 +115,14 @@ export function useVirtualListState(propHeight: number) {
 
     const sumContentHeight = sumContentHeightRef.current;
     const viewportHeight = viewportHeightRef.current;
-    const viewport = viewportRef.current!;
 
     scrollRef.current!.style.height = `${sumContentHeight}px`;
 
     const bottom = (sumContentHeight) - viewportHeight - height;
 
-    console.log("bottom", bottom, "    top", viewportScrollTopRef.current);
-
-    const isAutoScroll = bottom <= viewportScrollTopRef.current;
+    // ここの +3 は拡大率が 100% でない時の誤差を埋めるための値
+    // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
+    const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
     if (isAutoScroll) scrollTo("bottom");
 
     refresh(x => x + 1);   // scrollTo が実行されたとしても必要
@@ -135,36 +134,9 @@ export function useVirtualListState(propHeight: number) {
     () => {
       const viewport = viewportRef.current!;
 
-      let heightDiff = propHeight - viewportHeightRef.current;
-
-      /*
-       * 実際の HTML Element の値を変える順序が大切
-       * 今回は「ビューポートの高さ > スクロール位置」の順で変更する
-       * ズレる差分だけ調整する必要がある
-       */
-      if (heightDiff > 0) {
-        const XXX = (viewportScrollTopRef.current + propHeight) - sumContentHeightRef.current;
-        if (XXX > 0) {
-          heightDiff -= XXX;
-        }
-      }
+      const heightDiff = propHeight - viewportHeightRef.current;
 
       viewportHeightRef.current = propHeight;
-
-      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
-      // const oldViewEleHeight = viewport.style.height;
-
-      viewport.style.height = `${propHeight}px`;
-      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
-      // const oldScrollTop = viewport.scrollTop;
-      const oldScTop = viewportScrollTopRef.current;
-      viewportScrollTopRef.current -= heightDiff;
-      viewport.scrollTop = viewportScrollTopRef.current;
-
-
-      console.log(`dif: ${heightDiff}   calc: ${viewportScrollTopRef.current - oldScTop}`);
-      console.log(`ScTop: old:${oldScTop}   ${viewportScrollTopRef.current}`);
-
 
       /** 「拡大率 百分率で小数点がある場合にズレる」のは
        * スクロール位置が画面上のピクセル位置に依存しているせいで、
@@ -175,11 +147,26 @@ export function useVirtualListState(propHeight: number) {
        * 実スクロール位置から、新しいスクロール位置を判定する関数 {@link scrollTo} 内部で
        * scrollTop を新しいスクロール位置に指定する必要がある
        * 
-       * そのため コメント追加/ウィンドウ縦幅変更 時にプログラムからスクロール位置を変更
+       * そのため コメント追加/ウィンドウ縦幅変更 時に
+       *   → プログラムから scrollTop を設定
        *   → スクロールイベントが発生
-       *   → scrollTop を元に新しいスクロール位置を設定
-       *   → 
+       *   → 現在の scrollTop を元に新しいスクロール位置を設定
+       *   → その値は現在の描画位置と違うため少しズレる
+       * 
+       * また、コメント追加時の自動スクロールでは
+       * スクロール位置の計算に誤差が生まれるため、自動スクロールが反応しない場合がある
+       * 
+       * スクロールイベントの原因が ユーザー or プログラム か判断できれば問題は全て解決する
        */
+
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // const oldViewEleHeight = viewport.style.height;
+
+      viewport.style.height = `${propHeight}px`;
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // const oldScrollTop = viewport.scrollTop;
+      viewportScrollTopRef.current -= heightDiff;
+      viewport.scrollTop = viewportScrollTopRef.current;
 
       // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
       // console.log("rowTopRef.current", renderRowTopRef.current, "   viewport.scrollTop", viewport.scrollTop);
@@ -215,12 +202,9 @@ export function useVirtualListState(propHeight: number) {
     const scroll = scrollRef.current;
     if (viewport == null || scroll == null) return;
 
-    const isAuto = { value: true };
-    console.log(isAuto);
-
-
     const scrollEvent = (_e: Event) => {
-      if (!isAuto.value) return;
+      // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
+      // プログラムなら何もしない
       scrollTo(viewport.scrollTop);
       refresh(x => x + 1);
     };

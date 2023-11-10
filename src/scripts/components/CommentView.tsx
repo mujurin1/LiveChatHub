@@ -42,20 +42,6 @@ export function CommentView(props: CommentViewProps) {
         <input type="number" id="input_text" />
         <button onClick={() => {
           r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
-          r?.state?.addContent(`${contentId++}`, 40);
         }}>追加</button>
         <div>
           {Math.random()}
