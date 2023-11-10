@@ -13,13 +13,13 @@ import { useWidnowSize } from "./hooks/useWidnowSize";
 
 createRoot(document.getElementById("root")!)
   .render(
-    <React.StrictMode>
-      <Provider store={store}>
-        {/* <IndexComponent /> */}
-        <TestComponent />
-        {/* <XComponent /> */}
-      </Provider>
-    </React.StrictMode>
+    // <React.StrictMode>
+    <Provider store={store}>
+      {/* <IndexComponent /> */}
+      <TestComponent />
+      {/* <XComponent /> */}
+    </Provider>
+    // </React.StrictMode>
   );
 
 

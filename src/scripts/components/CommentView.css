@@ -54,8 +54,27 @@
 }
 
 .comment-view-item {
-  background-color: #b7e8fd;
-  font-size: 20px;
+  /* background-color: #b7e8fd; */
+  /* font-size: 20px; */
 }
+
+/* TODO: 調査: has() は直接の子でなくて、子の子でも良いのか? */
+.virtual-list-row:has(.comment-view-item):nth-child(even) {
+  background: #add8e6;
+}
+
+.virtual-list-row:has(.comment-view-item):nth-child(odd) {
+  background: #add8e6;
+  /* background: #e0ffff; */
+}
+
+/* 
+.comment-view-item:nth-child(even) {
+  background: #add8e6;
+}
+
+.comment-view-item:nth-child(odd) {
+  background: #e0ffff;
+} */
 
 /* #endregion CommentViewHeader */

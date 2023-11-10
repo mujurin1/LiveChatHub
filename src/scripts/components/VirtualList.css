@@ -15,7 +15,6 @@
   top: 0;
   left: 0;
   width: 100%;
-  background: no-repeat url("https://img.freepik.com/free-photo/vertical-shot-old-fishing-boats-turned-upside-down-gloomy-sky_181624-39284.jpg?w=740&t=st=1699424432~exp=1699425032~hmac=a6e4f89a21aa022e1237485f87f7b3e654dc75adee71502f36da0f7f07fbba1c")
 }
 
 .virtual-list-lineup {
@@ -27,6 +26,5 @@
 }
 
 .virtual-list-row {
-  height: 40px;
   position: relative;
 }
