@@ -9,6 +9,7 @@ import { dep } from "./service/dep";
 import { store } from "./store";
 
 import "../styles/index.css";
+import { useWidnowSize } from "./hooks/useWidnowSize";
 
 createRoot(document.getElementById("root")!)
   .render(
@@ -195,19 +196,14 @@ function IndexComponent() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TestComponent() {
-  const [height, setHeight] = useState(0);
+  const { windowWidth, windowHeight } = useWidnowSize();
 
   return (
     <div>
       <CommentView
-        height={400 + height}
+        height={windowHeight - 400}
+        width={windowWidth}
       />
-
-      <div>
-        <input type="range" min="0" max="500" onChange={e =>
-          setHeight(Number(e.target.value))
-        } />
-      </div>
     </div>
   );
 }

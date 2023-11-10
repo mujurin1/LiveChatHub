@@ -3,7 +3,12 @@
   position: relative;
   overflow: auto;
   box-sizing: border-box;
+
 }
+
+/* .virtual-list::-webkit-scrollbar {
+  display: none;
+} */
 
 .virtual-list-scroll {
   position: absolute;

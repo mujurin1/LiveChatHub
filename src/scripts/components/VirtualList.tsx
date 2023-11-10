@@ -47,7 +47,7 @@ interface LineupProps {
 function Lineup(props: LineupProps) {
   const {
     rowLayouts,
-    rowTop,
+    renderRowTop,
 
     // refreshKey,
 
@@ -63,7 +63,7 @@ function Lineup(props: LineupProps) {
       key={node.value.rowKey}
       className="virtual-list-row"
       css={css`
-          top: ${rowTop}px;
+          top: ${renderRowTop}px;
           `}
     >
       {RowLayout.isRequire(node.value)

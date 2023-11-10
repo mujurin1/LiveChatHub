@@ -40,9 +40,10 @@ export function useVirtualListState(propHeight: number) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const viewportHeightRef = useRef(propHeight);
+  const viewportScrollTopRef = useRef(0);
   const sumContentHeightRef = useRef(0);
   const rowCountRef = useRef(10);
-  const rowTopRef = useRef(0);
+  const renderRowTopRef = useRef(0);
 
   const rowLayouts = useMemo<LinkedList<RowLayoutAny>>(createRowLayouts, []);
   /** { contentId: `contentId` の行の描画後の高さ }[] */
@@ -59,11 +60,10 @@ export function useVirtualListState(propHeight: number) {
   const refreshRowLayout = useCallback(() => {
     if (rowHeights.length === 0) return;
 
-    const viewport = viewportRef.current!;
     const viewportHeight = viewportHeightRef.current;
 
     let contentIndex = 0;
-    let rowTop = viewport.scrollTop;
+    let rowTop = viewportScrollTopRef.current;
 
     for (; contentIndex < rowHeights.length; contentIndex++) {
       const height = rowHeights.values[contentIndex];
@@ -72,7 +72,7 @@ export function useVirtualListState(propHeight: number) {
       rowTop = newTop;
     }
 
-    rowTopRef.current = -rowTop;
+    renderRowTopRef.current = -rowTop;
 
     rowTop += viewportHeight;
     for (const node of rowLayouts) {
@@ -101,7 +101,8 @@ export function useVirtualListState(propHeight: number) {
     if (toY === "bottom") toY = sumContentHeight - viewportHeight;
     if (toY < 0) toY = 0;
 
-    viewport.scrollTop = toY;
+    viewportScrollTopRef.current = toY;
+    viewport.scrollTop = viewportScrollTopRef.current;
 
     refreshRowLayout();
 
@@ -120,7 +121,9 @@ export function useVirtualListState(propHeight: number) {
 
     const bottom = (sumContentHeight) - viewportHeight - height;
 
-    const isAutoScroll = bottom <= viewport.scrollTop;
+    console.log("bottom", bottom, "    top", viewportScrollTopRef.current);
+
+    const isAutoScroll = bottom <= viewportScrollTopRef.current;
     if (isAutoScroll) scrollTo("bottom");
 
     refresh(x => x + 1);   // scrollTo が実行されたとしても必要
@@ -137,19 +140,16 @@ export function useVirtualListState(propHeight: number) {
       /*
        * 実際の HTML Element の値を変える順序が大切
        * 今回は「ビューポートの高さ > スクロール位置」の順で変更する
-       * そのため以下の場合にズレるので、ズレる差分だけ調整する必要がある
+       * ズレる差分だけ調整する必要がある
        */
-
       if (heightDiff > 0) {
-        const XXX = (viewport.scrollTop + propHeight) - sumContentHeightRef.current;
+        const XXX = (viewportScrollTopRef.current + propHeight) - sumContentHeightRef.current;
         if (XXX > 0) {
           heightDiff -= XXX;
         }
       }
 
-
       viewportHeightRef.current = propHeight;
-      rowTopRef.current += heightDiff;
 
       // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
       // const oldViewEleHeight = viewport.style.height;
@@ -157,10 +157,34 @@ export function useVirtualListState(propHeight: number) {
       viewport.style.height = `${propHeight}px`;
       // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
       // const oldScrollTop = viewport.scrollTop;
-      viewport.scrollTop -= heightDiff;
+      const oldScTop = viewportScrollTopRef.current;
+      viewportScrollTopRef.current -= heightDiff;
+      viewport.scrollTop = viewportScrollTopRef.current;
 
+
+      console.log(`dif: ${heightDiff}   calc: ${viewportScrollTopRef.current - oldScTop}`);
+      console.log(`ScTop: old:${oldScTop}   ${viewportScrollTopRef.current}`);
+
+
+      /** 「拡大率 百分率で小数点がある場合にズレる」のは
+       * スクロール位置が画面上のピクセル位置に依存しているせいで、
+       * 指定した scrollTop がピクセル上でない場合に、近くのピクセルに近似される？ため？
+       * 
+       * なので scrollTop は参照せずに指定するだけに留めれば良いのだが、
+       * スクロールイベント発生時にそれが ユーザー or プログラム をイベントから判断することが不可能なので、
+       * 実スクロール位置から、新しいスクロール位置を判定する関数 {@link scrollTo} 内部で
+       * scrollTop を新しいスクロール位置に指定する必要がある
+       * 
+       * そのため コメント追加/ウィンドウ縦幅変更 時にプログラムからスクロール位置を変更
+       *   → スクロールイベントが発生
+       *   → scrollTop を元に新しいスクロール位置を設定
+       *   → 
+       */
 
       // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // console.log("rowTopRef.current", renderRowTopRef.current, "   viewport.scrollTop", viewport.scrollTop);
+      // console.log(heightDiff - (oldScrollTop - viewport.scrollTop));
+
       // console.log(`${oldScrollTop} - ${viewport.scrollTop} = `, oldScrollTop - viewport.scrollTop);
       // console.log(`viewport height   :   old: ${oldViewEleHeight}   ${viewport.style.height}   dif: ${heightDiff}`);
       // console.log(`viewport scrollTop:   old: ${oldScrollTop}   ${viewport.scrollTop}`);
@@ -191,7 +215,12 @@ export function useVirtualListState(propHeight: number) {
     const scroll = scrollRef.current;
     if (viewport == null || scroll == null) return;
 
+    const isAuto = { value: true };
+    console.log(isAuto);
+
+
     const scrollEvent = (_e: Event) => {
+      if (!isAuto.value) return;
       scrollTo(viewport.scrollTop);
       refresh(x => x + 1);
     };
@@ -205,7 +234,7 @@ export function useVirtualListState(propHeight: number) {
     scrollRef,
 
     rowLayouts,
-    rowTop: rowTopRef.current,
+    renderRowTop: renderRowTopRef.current,
 
     refreshKey,
 

@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 
-export function useWidnowWidth(): number {
-  const [headerWidth, setHeaderWidth] = useState(window.innerWidth);
+export function useWidnowSize() {
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
 
   const notifyRowSizes = useCallback(() => {
-    setHeaderWidth(window.innerWidth);
+    setWindowWidth(window.innerWidth);
+    setWindowHeight(window.innerHeight);
   }, []);
 
   useEffect(() => {
@@ -13,5 +15,5 @@ export function useWidnowWidth(): number {
     return () => window.removeEventListener("resize", notifyRowSizes);
   }, [notifyRowSizes]);
 
-  return headerWidth;
+  return { windowWidth, windowHeight };
 }

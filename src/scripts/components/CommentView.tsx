@@ -1,7 +1,7 @@
 import { css } from "@emotion/react";
 import { nanoid } from "nanoid";
 import { useMemo } from "react";
-import { useWidnowWidth } from "../hooks/useWidnowWidth";
+import { useWidnowSize } from "../hooks/useWidnowSize";
 import { useAppSelector } from "../store";
 import { VirtualList, RowRender, VirtualListState } from "./VirtualList";
 import { CommentViewHeader } from "./CommentViewHeader";
@@ -12,11 +12,11 @@ export * from "./CommentViewHeader";
 
 export interface CommentViewProps {
   height: number;
+  width: number;
 }
 
 let contentId = 0;
 export function CommentView(props: CommentViewProps) {
-  const headerWidth = useWidnowWidth();
   const realityColumns = useAppSelector(state => state.header.columns)
     .map(x => x.width);
   const tempColumns = useAppSelector(state => state.header.columnsTemp)
@@ -28,7 +28,7 @@ export function CommentView(props: CommentViewProps) {
     <div>
       <div className="comment-view-body">
         <CommentViewHeader
-          width={headerWidth}
+          width={props.width}
           height={50}
         />
         <VirtualList
