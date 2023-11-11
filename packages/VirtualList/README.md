@@ -38,36 +38,36 @@ VirtualList を構成するコンポーネント
 > を定義し、React に再計算してもらう場合にこの値を更新している
 
 主要な変数は以下
-* `contentHeights` : コンテンツのIDをキー/描画後の高さを値として持つコレクション
-* `rowLayouts` : 表示する行の情報 (`RowLayout`) を持つ連結リスト
-* `viewportRef` : リストビュー全体の要素への参照 (className: `virtual-list`)
-* `scrollRef` : リストビューのスクロール要素への参照 (classname: `virtual-list-scroll`)
+* contentHeights : コンテンツのIDをキー/描画後の高さを値として持つコレクション
+* rowLayouts : 表示する行の情報 (RowLayout) を持つ連結リスト
+* viewportRef : リストビュー全体の要素への参照 (className: virtual-list)
+* scrollRef : リストビューのスクロール要素への参照 (classname: virtual-list-scrol)
 
 主要な関数は以下
-* `addContent` : リストビューに表示するコンテンツのIDを追加する
-* `updateRowHeight` : コンテンツの高さを更新する
+* addContent : リストビューに表示するコンテンツのIDを追加する
+* updateRowHeight : コンテンツの高さを更新する
 
 
 ### VirtualList
 VirtualList の利用者が扱う唯一のコンポーネントです\
-`ResizeObserver` で各行の高さを監視しています
+`ResizeObserver` を使用して各行の高さを監視します
 
 
 VirtualList コンポーネントの階層
 
-* div (className: `virtual-list`)
-  * div (className: `virtual-list-scroll`)
-  * div (className: `virtual-list-lineup`)
-    * `VirtualListRow` の配列
-      * div (className: `virtual-list-row`)
-        * `RowRender` または `undefined`
+* div (className: virtual-list)
+  * div (className: virtual-list-scroll)
+  * div (className: virtual-list-lineup)
+    * VirtualListRow の配列
+      * div (className: virtual-list-row)
+        * RowRender または `undefined`
 
 
 ### VirtualListRow
 リストビューの行単位のコンポーネントです
 
 このコンポーネントは `RowLayout.RowKey` に対応して生成されます\
-`RowRender` と `RowLayout.ContentId` を元に描画します
+RowRender と `RowLayout.ContentId` を元に描画します
 
 ### RowRender
 リストビューの各行の内容を描画するコンポーネントです\
