@@ -9,9 +9,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "packages/VirtualList/src/VirtualList.tsx",
-    "packages/VirtualList/src/VirtualListState.tsx"
-  ]
+  "include": ["src/**/*"]
 }

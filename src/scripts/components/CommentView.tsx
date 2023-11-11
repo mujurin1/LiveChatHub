@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAppSelector } from "../store";
-import { VirtualList, RowRender, VirtualListState } from "./VirtualList";
 import { CommentViewHeader } from "./CommentViewHeader";
+import { VirtualList, RowRender, useVirtualListState } from "@lch/virtual-list";
 
 import "./CommentView.css";
 
@@ -19,7 +19,7 @@ export function CommentView(props: CommentViewProps) {
   const tempColumns = useAppSelector(state => state.header.columnsTemp)
     ?.map(x => x.width);
 
-  const r = useMemo(() => ({ state: (null!) as VirtualListState }), []);
+  const state = useVirtualListState(props.height, true);
 
   return (
     <div>
@@ -29,21 +29,20 @@ export function CommentView(props: CommentViewProps) {
           height={50}
         />
         <VirtualList
-          height={props.height}
+          state={state}
           rowRender={CommentViewRow}
-          stateRef={r}
         />
       </div>
 
       <div>
         <input type="number" id="input_text" />
         <button onClick={() => {
-          r.state.addContent(`${contentId++}`, 40);
-          r.state.addContent(`${contentId++}`, 40);
-          r.state.addContent(`${contentId++}`, 40);
-          r.state.addContent(`${contentId++}`, 40);
-          r.state.addContent(`${contentId++}`, 40);
-          r.state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
         }}>追加</button>
       </div>
 
@@ -58,22 +57,19 @@ export function CommentView(props: CommentViewProps) {
 
 const heightMap = new Map<string, number>();
 
-function CommentViewRow({ rowLayout }: Parameters<RowRender>[0]) {
-  // const [height, setHeight] = useState(40);
-  const [height, setHeight] = useState(heightMap.get(rowLayout.contentId) ?? 40);//+ rowLayout.rowKey * 3);
+function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
+  const [height, setHeight] = useState(heightMap.get(contentId) ?? 40);//+ rowKey * 3);
 
   return (
     <div className="comment-view-item" style={{ height }} >
-      <div>{`key-${rowLayout.rowKey} / id-${rowLayout.contentId}  height:${height}`}</div>
+      <div>{`id-${contentId}  height:${height}`}</div>
       <input
         type="range"
         value={height}
         min={40}
         max={300}
         onChange={e => {
-          console.log(rowLayout.contentId, +e.target.value);
-
-          heightMap.set(rowLayout.contentId, +e.target.value);
+          heightMap.set(contentId, +e.target.value);
           setHeight(+e.target.value);
         }} />
     </div>

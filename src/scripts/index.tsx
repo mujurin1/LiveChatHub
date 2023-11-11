@@ -7,19 +7,19 @@ import { Connection } from "./components_/Connection";
 import { LiveError } from "./definition/model/LiveError";
 import { dep } from "./service/dep";
 import { store } from "./store";
+import { useWidnowSize } from "./hooks/useWidnowSize";
 
 import "../styles/index.css";
-import { useWidnowSize } from "./hooks/useWidnowSize";
 
 createRoot(document.getElementById("root")!)
   .render(
-    // <React.StrictMode>
-    <Provider store={store}>
-      {/* <IndexComponent /> */}
-      <TestComponent />
-      {/* <XComponent /> */}
-    </Provider>
-    // </React.StrictMode>
+    <React.StrictMode>
+      <Provider store={store}>
+        {/* <IndexComponent /> */}
+        <TestComponent />
+        {/* <XComponent /> */}
+      </Provider>
+    </React.StrictMode>
   );
 
 
@@ -201,7 +201,7 @@ function TestComponent() {
   return (
     <div>
       <CommentView
-        height={windowHeight - 400}
+        height={windowHeight - 200}
         width={windowWidth}
       />
     </div>

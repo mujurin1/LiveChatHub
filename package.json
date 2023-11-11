@@ -21,6 +21,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@lch/common": "file:packages/Common",
+    "@lch/virtual-list": "file:packages/VirtualList",
     "@mui/lab": "^5.0.0-alpha.149",
     "@mui/material": "^5.14.14",
     "@reduxjs/toolkit": "^1.9.7",
