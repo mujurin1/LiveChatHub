@@ -20,7 +20,7 @@
 .virtual-list-lineup {
   position: sticky;
   inset: 0;
-  overflow: hidden;
+  /* overflow: hidden; */
   width: 100%;
   height: 100%;
 }

@@ -21,7 +21,12 @@ export type VirtualListState = ReturnType<typeof useVirtualListState>;
  * @returns
  */
 export function useVirtualListState(propHeight: number, propAutoScroll: boolean) {
-  const [refreshKey, refresh] = useState(0);
+  const [
+    // いずれかの状態が変化したことを通知するオブジェクト
+    updatedAnyVersion, updatedAny,
+    // rowLayouts が変化したことを通知するオブジェクト
+    updatedRowLayoutVersion, updatedRowLayout,
+  ] = useCustomHook();
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -37,11 +42,15 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   /** { contentId: `contentId` の行の描画後の高さ }[] */
   const contentHeights = useMemo(() => new SetonlyCollection<number>(), []);
 
-  const refreshRowLayout = useCallback(() => {
+  /**
+   * @param source 再計算をする原因
+   */
+  const refreshRowLayout = useCallback((source: "any" | "scroll") => {
     if (contentHeights.length === 0) return;
 
     const viewportHeight = viewportHeightRef.current;
 
+    const oldTopContentId = rowLayouts.first.value.contentId;
     let contentIndex = 0;
     let rowTop = viewportScrollTopRef.current;
 
@@ -55,6 +64,13 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     renderRowTopRef.current = -rowTop;
 
     rowTop += viewportHeight;
+
+    // スクロールによる再計算の場合は、一番上の行が同じなら rowLayouts は変更する必要がない
+    if (source === "scroll" && contentHeights.keys[contentIndex] === oldTopContentId) {
+      updatedAny();
+      return;
+    }
+
     for (const node of rowLayouts) {
       const rowKey = contentIndex % rowCountRef.current;
 
@@ -70,7 +86,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
       contentIndex += 1;
     }
 
-    refresh(x => x + 1);
+    updatedRowLayout();
   }, []);
 
   const updateRowHeight = useCallback((contentId: string, height: number) => {
@@ -94,9 +110,9 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
     const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
     if (isAutoScroll && autoScrollRef.current) scrollTo("bottom");
-    else refreshRowLayout();
+    else refreshRowLayout("any");
 
-    refresh(x => x + 1);
+    updatedAny();
   }, []);
 
   const scrollTo = useCallback((toY: number | "bottom") => {
@@ -104,15 +120,20 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     const sumContentHeight = sumContentHeightRef.current;
     const viewportHeight = viewportHeightRef.current;
 
-    if (toY === "bottom") toY = sumContentHeight - viewportHeight;
+    let source: Parameters<typeof refreshRowLayout>[0] = "scroll";
+    if (toY === "bottom") {
+      toY = sumContentHeight - viewportHeight;
+      // toY === "bottom" は「行の追加」の場合があるので、RowLayout は必ず更新してもらう
+      source = "any";
+    }
     if (toY < 0) toY = 0;
 
     viewportScrollTopRef.current = toY;
     viewport.scrollTop = viewportScrollTopRef.current;
 
-    refreshRowLayout();
+    refreshRowLayout(source);
 
-    refresh(x => x + 1);
+    updatedAny();
   }, []);
 
   const addContent = useCallback((contentId: string, height: number) => {
@@ -132,7 +153,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
 
     if (isAutoScroll && autoScrollRef.current) scrollTo("bottom");
 
-    refresh(x => x + 1);   // scrollTo が実行されたとしても必要
+    updatedAny();   // scrollTo が実行されたとしても必要
   }, []);
 
 
@@ -204,8 +225,8 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
       oldLast.next = rowLayouts.last;
     }
 
-    refreshRowLayout();
-    refresh(x => x + 1);
+    refreshRowLayout("any");
+    updatedAny();
     // 引数で受け取ったビューポートの高さを元に再計算するため propsHeight を指定する
   }, [propHeight]);
 
@@ -226,7 +247,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
       // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
       // プログラムなら何もしない
       scrollTo(viewport.scrollTop);
-      refresh(x => x + 1);
+      updatedAny();
     };
 
     viewport.addEventListener("scroll", scrollEvent, { passive: true });
@@ -237,11 +258,11 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     viewportRef,
     scrollRef,
 
-    /**
-     * 他の全ての値は可変なオブジェクト\
-     * React に状態の変更を伝えるにはこの値を利用する
-     */
-    refreshKey,
+    /** いずれかの状態が変化したことを伝えるオブジェクト */
+    updatedAnyVersion,
+    /** rowLayouts が変化したことを伝えるオブジェクト */
+    updatedRowLayoutVersion,
+
     rowLayouts,
     renderRowTop: renderRowTopRef.current,
 
@@ -256,3 +277,26 @@ const createRowLayouts = () => new LinkedList<RowLayout>(
   RowLayout.new(0),
   RowLayout.new(1),
 );
+
+/**
+ * VirtualListState の状態が変化したことを伝えるオブジェクトを返す\
+ */
+function useCustomHook() {
+  const [updatedAnyVersion, setAny] = useState(0);
+  const [updatedRowLayoutVersion, setRowLayout] = useState(0);
+
+  const updatedAny = useCallback(() => {
+    setAny(x => x + 1);
+  }, []);
+  const updatedRowLayout = useCallback(() => {
+    setRowLayout(x => x + 1);
+    setAny(x => x + 1);
+  }, []);
+
+  return [
+    updatedAnyVersion,
+    updatedAny,
+    updatedRowLayoutVersion,
+    updatedRowLayout,
+  ] as const;
+}
