@@ -60,6 +60,8 @@ const heightMap = new Map<string, number>();
 function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
   const [height, setHeight] = useState(heightMap.get(contentId) ?? 40);//+ rowKey * 3);
 
+  const [text, setText] = useState("");
+
   return (
     <div className="comment-view-item" style={{ height }} >
       <div>{`id-${contentId}  height:${height}`}</div>
@@ -72,6 +74,12 @@ function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
           heightMap.set(contentId, +e.target.value);
           setHeight(+e.target.value);
         }} />
+      <input
+        type="text"
+        value={text}
+        onChange={e => setText(e.target.value)}
+      />
+      value: {text}
     </div>
   );
 }

@@ -8,6 +8,7 @@
     "test": "jest",
     "build": "webpack",
     "dev": "webpack --mode=development --env NODE_ENV=development --progress --watch",
+    "release": "webpack --mode=production --env NODE_ENV=production --progress --watch",
     "lint": "eslint --fix --max-warnings 0 src/"
   },
   "keywords": [],

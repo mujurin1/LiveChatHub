@@ -11,8 +11,4 @@ export const RowLayout = {
   new: (rowKey: number, contentId?: string): RowLayout => {
     return { rowKey, contentId };
   },
-  toNull: (rowLayout: RowLayout): RowLayout => {
-    rowLayout.contentId = undefined;
-    return rowLayout;
-  }
 };
