@@ -67,6 +67,10 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
 
     renderRowTopRef.current = -rowTop;
 
+    // TODO: 最適化の部分
+    //       スクロールによる無駄な再計算を無くすことが出来るコードだが、
+    //       余白が見える問題があるので直す
+    //       というか、分割統治法の部分と被るので後回し‥
     // // スクロールによる再計算の場合は、一番上の行が同じなら rowLayouts は変更する必要がない
     // if (source === "scroll" && contentHeights.keys[contentIndex] === oldTopContentId) {
     //   updatedAny();
