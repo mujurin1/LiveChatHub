@@ -1,4 +1,4 @@
-import { LinkedNode, SetonlyCollection } from "@lch/common";
+import { LinkedList, LinkedNode, SetonlyCollection } from "@lch/common";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { MIN_ROW_HEIGHT } from "./VirtualList";
 import { RowLayout } from "./RowLayout";
@@ -149,12 +149,15 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   }, []);
 
   const updateRowHeight = useCallback((contentId: string, height: number) => {
+    const rowLayoutNode = rowLayoutNodeRef.current;
+    if (rowLayoutNode == null) return;
+
     const oldValue = contentHeights.getValue(contentId);
     const diff = height - oldValue;
-
     if (diff === 0) return;
 
     const scroll = scrollRef.current!;
+    const viewport = viewportRef.current!;
     const sumContentHeight = sumContentHeightRef.current;
     const viewportHeight = viewportHeightRef.current;
 
@@ -162,6 +165,19 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     sumContentHeightRef.current += diff;
 
     scroll.style.height = `${sumContentHeightRef.current}px`;
+
+    //#region 変更された行が表示範囲 (を含む) より上の場合はスクロール位置を調整する
+    const contentIndex = contentHeights.keyIndexes[contentId];
+    const renderBottomContentId = LinkedList
+      .find(rowLayoutNode, node => node.next!.value.contentId == null)!
+      .value.contentId!;
+    const renderBottomContentIndex = contentHeights.keyIndexes[renderBottomContentId];
+    if (contentIndex < renderBottomContentIndex) {
+      viewportScrollTopRef.current += diff;
+      if (viewportScrollTopRef.current < 0) viewportScrollTopRef.current = 0;
+      viewport.scrollTop = viewportScrollTopRef.current;
+    }
+    //#endregion 変更された行が表示範囲 (を含む) より上の場合はスクロール位置を調整する
 
     const bottom = (sumContentHeight) - viewportHeight - height;
 
