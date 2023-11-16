@@ -39,6 +39,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   const sumContentHeightRef = useRef(0);
   const rowCountRef = useRef(10);
   const renderRowTopRef = useRef(0);
+  const __dbg_user_scroll_ref = useRef(true);
 
   const rowLayoutNodeRef = useRef<RowLayoutNode | null>(null);
   // const rowLayoutNode = useMemo<RowLayoutNode | null>(() => null, []);
@@ -66,13 +67,11 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
 
     renderRowTopRef.current = -rowTop;
 
-    rowTop += viewportHeight;
-
-    // スクロールによる再計算の場合は、一番上の行が同じなら rowLayouts は変更する必要がない
-    if (source === "scroll" && contentHeights.keys[contentIndex] === oldTopContentId) {
-      updatedAny();
-      return;
-    }
+    // // スクロールによる再計算の場合は、一番上の行が同じなら rowLayouts は変更する必要がない
+    // if (source === "scroll" && contentHeights.keys[contentIndex] === oldTopContentId) {
+    //   updatedAny();
+    //   return;
+    // }
 
     rowLayoutNodeRef.current = {
       value: RowLayout.new(
@@ -82,18 +81,26 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     };
 
     let lastNode = rowLayoutNodeRef.current;
+    let sumRowHeight = -rowTop + contentHeights.values[contentIndex];
+
     for (let i = 1; i < rowCount; i++) {
       contentIndex += 1;
+      let node: RowLayoutNode;
 
-      const node = {
-        value: RowLayout.new(
-          contentIndex % rowCount,
-          contentHeights.keys[contentIndex]
-        )
-      };
+      if (sumRowHeight < viewportHeight) {
+        node = {
+          value: RowLayout.new(
+            contentIndex % rowCount,
+            contentHeights.keys[contentIndex]
+          )
+        };
+      } else {
+        node = { value: { rowKey: contentIndex % rowCount } };
+      }
 
       lastNode.next = node;
       lastNode = node;
+      sumRowHeight += contentHeights.values[contentIndex];
     }
 
     updatedRowLayout();
@@ -249,6 +256,8 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     if (viewport == null || scroll == null) return;
 
     const scrollEvent = (_e: Event) => {
+      if (!__dbg_user_scroll_ref.current) return;
+
       // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
       // プログラムなら何もしない
       scrollTo(viewport.scrollTop);
@@ -267,6 +276,8 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     updatedAnyVersion,
     /** rowLayoutNode が変化したことを伝えるオブジェクト */
     updatedRowLayoutVersion,
+
+    __dbg_user_scroll_ref,
 
     rowLayoutNode: rowLayoutNodeRef.current,
     renderRowTop: renderRowTopRef.current,

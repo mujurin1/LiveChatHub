@@ -20,7 +20,9 @@ export function CommentView(props: CommentViewProps) {
   const tempColumns = useAppSelector(state => state.header.columnsTemp)
     ?.map(x => x.width);
 
-  const state = useVirtualListState(props.height, true);
+  const [autoScroll, setAutoScroll] = useState(true);
+
+  const state = useVirtualListState(props.height, autoScroll);
 
   return (
     <div>
@@ -40,10 +42,27 @@ export function CommentView(props: CommentViewProps) {
         <button onClick={() => {
           state.addContent(`${contentId++}`, 40);
           state.addContent(`${contentId++}`, 40);
-          // state.addContent(`${contentId++}`, 40);
-          // state.addContent(`${contentId++}`, 40);
-          // state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
+          state.addContent(`${contentId++}`, 40);
         }}>追加</button>
+
+        <label htmlFor="autoScroll">自動スクロール</label>
+        <input
+          id="autoScroll"
+          type="checkbox"
+          checked={autoScroll}
+          onChange={e => setAutoScroll(e.target.checked)}
+        />
+
+        <label htmlFor="userScroll">ユーザースクロール</label>
+        <input
+          id="userScroll"
+          type="checkbox"
+          // checked={state.__dbg_user_scroll_ref.current}
+          onChange={e => state.__dbg_user_scroll_ref.current = e.target.checked}
+        />
+
       </div>
 
       <div style={{ fontSize: 32 }}>

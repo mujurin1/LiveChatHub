@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import { VirtualListState } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
 import { LinkedList } from "@lch/common";
@@ -25,8 +25,8 @@ export function VirtualList(props: VirtualListProps) {
   } = props.state;
   const RowRender = props.rowRender;
 
-  const resizeObserver = useMemo(() => new ResizeObserver(e => {
-    for (const element of e) {
+  const resizeObserver = useMemo(() => new ResizeObserver(elements => {
+    for (const element of elements) {
       const target = element.target as HTMLElement;
       const contentId = target.dataset.contentId;
 
@@ -78,23 +78,21 @@ interface VirtualListRowProps {
 
 function VirtualListRow(props: VirtualListRowProps) {
   const { rowLayout, resizeObserver, RowRender } = props;
-  const ref = useRef<HTMLDivElement>();
+  const ref = useRef<HTMLDivElement>(null);
 
-  const onRefChange = useCallback((div: HTMLDivElement | null) => {
-    if (div == null) return;
+  useLayoutEffect(() => {
+    const target = ref.current;
+    if (target == null) return;
 
-    if (ref.current != null)
-      resizeObserver.unobserve(ref.current);
+    resizeObserver.observe(target);
 
-    ref.current = div;
-
-    resizeObserver.observe(div);
-  }, [resizeObserver]);
+    return () => resizeObserver.unobserve(target);
+  }, [resizeObserver, rowLayout.contentId]);
 
   return (
     <div
       className="virtual-list-row"
-      ref={onRefChange}
+      ref={ref}
       data-content-id={rowLayout.contentId}
     >
       {
