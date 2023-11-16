@@ -1,14 +1,20 @@
 .virtual-list {
   background-color: #c1eaae;
   position: relative;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
   box-sizing: border-box;
-
 }
 
-/* .virtual-list::-webkit-scrollbar {
-  display: none;
-} */
+.virtual-list::-webkit-scrollbar {
+  width: 10px;
+  background-color: #aaa;
+  display: visible;
+}
+
+.virtual-list::-webkit-scrollbar-thumb {
+  background: #000;
+}
 
 .virtual-list-scroll {
   position: absolute;

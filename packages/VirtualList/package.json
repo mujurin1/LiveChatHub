@@ -12,5 +12,8 @@
       "eslint --fix --max-warnings 0"
     ]
   },
-  "main": "src/index.ts"
+  "main": "src/index.ts",
+  "dependencies": {
+    "@lch/common": "file:../Common"
+  }
 }

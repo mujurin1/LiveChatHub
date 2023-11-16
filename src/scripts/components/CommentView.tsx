@@ -4,6 +4,7 @@ import { CommentViewHeader } from "./CommentViewHeader";
 import { VirtualList, RowRender, useVirtualListState } from "@lch/virtual-list";
 
 import "./CommentView.css";
+import { selectColumns, selectGhostColumns } from "../slices/headerSlice";
 
 export * from "./CommentViewHeader";
 
@@ -39,10 +40,9 @@ export function CommentView(props: CommentViewProps) {
         <button onClick={() => {
           state.addContent(`${contentId++}`, 40);
           state.addContent(`${contentId++}`, 40);
-          state.addContent(`${contentId++}`, 40);
-          state.addContent(`${contentId++}`, 40);
-          state.addContent(`${contentId++}`, 40);
-          state.addContent(`${contentId++}`, 40);
+          // state.addContent(`${contentId++}`, 40);
+          // state.addContent(`${contentId++}`, 40);
+          // state.addContent(`${contentId++}`, 40);
         }}>追加</button>
       </div>
 
@@ -58,6 +58,27 @@ export function CommentView(props: CommentViewProps) {
 const heightMap = new Map<string, number>();
 
 function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
+  const columns = useAppSelector(selectColumns);
+  const goastColumns = useAppSelector(selectGhostColumns);
+
+  const steColumn = goastColumns ?? columns;
+
+  return (
+    <div className="comment-view-item">
+      {steColumn.map(state => (
+        <div
+          className="comment-view-item-content"
+          key={state.type}
+          style={{ width: state.width }}
+        >
+          {`${state.type}${contentId} `.repeat(10)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CommentViewRow_({ contentId }: Parameters<RowRender>[0]) {
   const [height, setHeight] = useState(heightMap.get(contentId) ?? 40);//+ rowKey * 3);
 
   const [text, setText] = useState("");

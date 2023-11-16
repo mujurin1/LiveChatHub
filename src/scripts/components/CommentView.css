@@ -20,7 +20,7 @@
   font-size: 18px;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 .comment-view-header-item-partition {
@@ -54,19 +54,16 @@
 }
 
 .comment-view-item {
-  /* background-color: #b7e8fd; */
-  /* font-size: 20px; */
+  display: flex;
+  border-bottom: dotted;
+  box-sizing: border-box;
+  border-width: 1px;
+  background-color: #b7e8fd;
+  font-size: 20px;
+  min-height: 40px;
 }
 
-/* TODO: 調査: has() は直接の子でなくて、子の子でも良いのか? */
-.virtual-list-row:has(.comment-view-item):nth-child(even) {
-  background: #add8e6;
-}
-
-.virtual-list-row:has(.comment-view-item):nth-child(odd) {
-  background: #add8e6;
-  /* background: #e0ffff; */
-}
+.comment-view-item-content {}
 
 /* 
 .comment-view-item:nth-child(even) {

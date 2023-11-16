@@ -52,6 +52,7 @@ export const headerSlice = createSlice({
 export const { setLineup, setColumnsTemp, setWidth, setWidthAndFlexWidth } = headerSlice.actions;
 
 export const selectColumnTypes = (state: RootState) => state.header.columns.map(column => column.width);
+export const selectColumns = (state: RootState) => state.header.columns;
 export const selectGhostColumns = (state: RootState) => state.header.columnsTemp ?? state.header.columns;
 // export const selectGhostColumns = createAppSelector(
 //   [

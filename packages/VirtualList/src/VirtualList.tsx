@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { VirtualListState } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
+import { LinkedList } from "@lch/common";
 
 import "./VirtualList.css";
-import { LinkedList } from "@lch/common";
 
 export type RowRender = (props: { contentId: string; }) => JSX.Element;
 

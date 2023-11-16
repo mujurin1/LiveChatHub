@@ -99,32 +99,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     updatedRowLayout();
   }, []);
 
-  const updateRowHeight = useCallback((contentId: string, height: number) => {
-    const oldValue = contentHeights.getValue(contentId);
-    const diff = height - oldValue;
-
-    if (diff === 0) return;
-
-    const scroll = scrollRef.current!;
-    const sumContentHeight = sumContentHeightRef.current;
-    const viewportHeight = viewportHeightRef.current;
-
-    contentHeights.set(contentId, height);
-    sumContentHeightRef.current += diff;
-
-    scroll.style.height = `${sumContentHeightRef.current}px`;
-
-    const bottom = (sumContentHeight) - viewportHeight - height;
-
-    // ここの +3 は拡大率が 100% でない時の誤差を埋めるための値
-    // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
-    const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
-    if (isAutoScroll && autoScrollRef.current) scrollTo("bottom");
-    else refreshRowLayout("any");
-
-    updatedAny();
-  }, []);
-
   const scrollTo = useCallback((toY: number | "bottom") => {
     const viewport = viewportRef.current!;
     const sumContentHeight = sumContentHeightRef.current;
@@ -165,6 +139,32 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     if (isAutoScroll && autoScroll) scrollTo("bottom");
 
     updatedAny();   // scrollTo が実行されたとしても必要
+  }, []);
+
+  const updateRowHeight = useCallback((contentId: string, height: number) => {
+    const oldValue = contentHeights.getValue(contentId);
+    const diff = height - oldValue;
+
+    if (diff === 0) return;
+
+    const scroll = scrollRef.current!;
+    const sumContentHeight = sumContentHeightRef.current;
+    const viewportHeight = viewportHeightRef.current;
+
+    contentHeights.set(contentId, height);
+    sumContentHeightRef.current += diff;
+
+    scroll.style.height = `${sumContentHeightRef.current}px`;
+
+    const bottom = (sumContentHeight) - viewportHeight - height;
+
+    // ここの +3 は拡大率が 100% でない時の誤差を埋めるための値
+    // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
+    const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
+    if (isAutoScroll && autoScrollRef.current) scrollTo("bottom");
+    else refreshRowLayout("any");
+
+    updatedAny();
   }, []);
 
 

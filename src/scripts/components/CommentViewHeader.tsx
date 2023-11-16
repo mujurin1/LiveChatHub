@@ -5,7 +5,8 @@ import { useDispatch } from "react-redux";
 import { setColumnsTemp, setWidth, setWidthAndFlexWidth } from "../slices/headerSlice";
 import { useAppSelector } from "../store";
 
-const minWidth = 20;
+const HEADER_COL_MIN_WIDTH = 20;
+const SCROLL_BAR_WIDTH = 10;
 
 export interface CommentViewHeaderProps {
   /**
@@ -20,7 +21,8 @@ export interface CommentViewHeaderProps {
 
 export function CommentViewHeader(props: CommentViewHeaderProps) {
   const columnsTemp = useAppSelector(state => state.header.columnsTemp);
-  const { headerColumns, partitionMouseDown } = useCommentViewHeaderState(props.width);
+
+  const { headerColumns, partitionMouseDown } = useCommentViewHeaderState(props.width - SCROLL_BAR_WIDTH);
   const lastIndex = headerColumns.length - 1;
 
   return (
@@ -31,21 +33,22 @@ export function CommentViewHeader(props: CommentViewHeaderProps) {
       `}
     >
       {(columnsTemp ?? headerColumns).map((column, i) => (
-        <div
-          key={column.type}
-          className="comment-view-header-item"
-          css={css`
-          width: ${column.width}px;
-          min-width: ${minWidth}px;
-          `}
-        >
-          <div className="comment-view-header-item-content">{column.type}</div>
-          {i === lastIndex ? undefined :
-            <div
-              className="comment-view-header-item-partition"
-              onMouseDown={e => partitionMouseDown(e, i)}
-            />}
-        </div>
+        <React.Fragment key={column.type}>
+          <div
+            className="comment-view-header-item"
+            style={{ width: column.width }}
+            css={css`
+            min-width: ${HEADER_COL_MIN_WIDTH}px;
+            `}
+          >
+            <div className="comment-view-header-item-content">{column.type}</div>
+            {i === lastIndex ? undefined :
+              <div
+                className="comment-view-header-item-partition"
+                onMouseDown={e => partitionMouseDown(e, i)}
+              />}
+          </div>
+        </React.Fragment>
       ))}
     </div>
   );
@@ -70,76 +73,73 @@ function useCommentViewHeaderState(width: number) {
     dispatch(setWidth(flexIndex, flexWidth));
   }, [dispatch, flexIndex, headerColumns, width]);
 
-  useEffect(
-    () => {
-      if (!resetedPartionEvent || resizeTemp == null || columnsTemp == null) return;
-      setResetedPartionEvent(false);
+  useEffect(() => {
+    if (!resetedPartionEvent || resizeTemp == null || columnsTemp == null) return;
+    setResetedPartionEvent(false);
 
-      const changeWidths = (clientX: number, isFinish: boolean): void => {
-        /** 幅の変化量 */
-        let amount = clientX - resizeTemp.startX;
-        if (amount === 0) return;
+    const changeWidths = (clientX: number, isFinish: boolean): void => {
+      /** 幅の変化量 */
+      let amount = clientX - resizeTemp.startX;
+      if (amount === 0) return;
 
-        if (!resizeTemp.left) amount *= -1;
+      if (!resizeTemp.left) amount *= -1;
 
-        let width = resizeTemp.startTargetWidth + amount;
-        let flexWidth = resizeTemp.startFlexWidth - amount;
+      let width = resizeTemp.startTargetWidth + amount;
+      let flexWidth = resizeTemp.startFlexWidth - amount;
 
-        const limit = width - minWidth;
-        if (limit < 0) {
-          width -= limit;
-          flexWidth += limit;
-        } else {
-          const flexLimit = flexWidth - minWidth;
-          if (flexLimit < 0) {
-            width += flexLimit;
-            flexWidth -= flexLimit;
-          }
+      const limit = width - HEADER_COL_MIN_WIDTH;
+      if (limit < 0) {
+        width -= limit;
+        flexWidth += limit;
+      } else {
+        const flexLimit = flexWidth - HEADER_COL_MIN_WIDTH;
+        if (flexLimit < 0) {
+          width += flexLimit;
+          flexWidth -= flexLimit;
         }
+      }
 
-        if (isFinish) {
-          dispatch(setWidthAndFlexWidth(resizeTemp.index, width, flexWidth));
-        } else {
-          const columns = [...columnsTemp];
-          columns[resizeTemp.index] = {
-            ...columns[resizeTemp.index],
-            width,
-          };
-          columns[flexIndex] = {
-            ...columns[flexIndex],
-            width: flexWidth,
-          };
-          columns[flexIndex].width = flexWidth;
-          dispatch(setColumnsTemp(columns));
-        }
-      };
+      if (isFinish) {
+        dispatch(setWidthAndFlexWidth(resizeTemp.index, width, flexWidth));
+      } else {
+        const columns = [...columnsTemp];
+        columns[resizeTemp.index] = {
+          ...columns[resizeTemp.index],
+          width,
+        };
+        columns[flexIndex] = {
+          ...columns[flexIndex],
+          width: flexWidth,
+        };
+        columns[flexIndex].width = flexWidth;
+        dispatch(setColumnsTemp(columns));
+      }
+    };
 
-      const onMouseMove = (e: MouseEvent) => {
-        changeWidths(e.clientX, false);
-      };
+    const onMouseMove = (e: MouseEvent) => {
+      changeWidths(e.clientX, false);
+    };
 
-      const onMouseUp = (e: MouseEvent) => {
-        changeWidths(e.clientX, true);
-        setResizeTemp(null);
-        dispatch(setColumnsTemp(null));
+    const onMouseUp = (e: MouseEvent) => {
+      changeWidths(e.clientX, true);
+      setResizeTemp(null);
+      dispatch(setColumnsTemp(null));
 
-        removeEventListener();
-      };
+      removeEventListener();
+    };
 
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
 
-      const removeEventListener = () => {
-        setRemoveEventListener(null);
+    const removeEventListener = () => {
+      setRemoveEventListener(null);
 
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-      };
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
 
-      setRemoveEventListener(() => removeEventListener);
-    },
-    [dispatch, flexIndex, resizeTemp, columnsTemp, resetedPartionEvent]
-  );
+    setRemoveEventListener(() => removeEventListener);
+  }, [dispatch, flexIndex, resizeTemp, columnsTemp, resetedPartionEvent]);
 
   const partitionMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
