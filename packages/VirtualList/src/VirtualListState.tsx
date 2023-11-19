@@ -134,7 +134,12 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     updatedAny();
   }, []);
 
-  const addContent = useCallback((contentId: string, height: number) => {
+  const addContent = useCallback((contentId: string) => {
+    // 行の最初の幅を見えないギリギリのサイズにすることで
+    // 行が描画される → 幅が更新される → 行が再描画される
+    // によるガクガク感を無くす
+    const height = 0.0625;
+
     const scroll = scrollRef.current!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
@@ -163,6 +168,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     const diff = height - oldValue;
     if (diff === 0) return;
 
+    const autoScroll = autoScrollRef.current;
     const scroll = scrollRef.current!;
     const viewport = viewportRef.current!;
     const sumContentHeight = sumContentHeightRef.current;
@@ -191,7 +197,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     // ここの +3 は拡大率が 100% でない時の誤差を埋めるための値
     // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
     const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
-    if (isAutoScroll && autoScrollRef.current) scrollTo("bottom");
+    if (isAutoScroll && autoScroll) scrollTo("bottom");
     else refreshRowLayout("any");
 
     updatedAny();

@@ -1,14 +1,31 @@
-import { useState, useCallback, useEffect } from "react";
-import React from "react";
-import { css } from "@emotion/react";
-import { useDispatch } from "react-redux";
-import { setColumnsTemp, setWidth, setWidthAndFlexWidth } from "../slices/headerSlice";
-import { useAppSelector } from "../store";
+import { useCallback, useEffect, useState } from "react";
 
-const HEADER_COL_MIN_WIDTH = 20;
-const SCROLL_BAR_WIDTH = 10;
+export type ColumnType = "no" | "icon" | "name" | "time" | "content" | "info";
+export type ColumnState = { type: ColumnType; width: number; };
 
-export interface CommentViewHeaderProps {
+export interface HeaderColumnState {
+  columns: ColumnState[];
+  columnsTemp: ColumnState[] | null;
+  flexIndex: number;
+}
+
+export const HEADER_COL_MIN_WIDTH = 20;
+export const SCROLL_BAR_WIDTH = 10;
+
+const initialHeaderColumnState: HeaderColumnState = {
+  columns: [
+    { type: "icon", width: 100 },
+    { type: "name", width: 100 },
+    { type: "time", width: 100 },
+    { type: "content", width: 100 },
+  ],
+  columnsTemp: null,
+  flexIndex: 3,
+};
+
+export type HeaderState = ReturnType<typeof useHeaderState>;
+
+export interface HeaderProps {
   /**
    * ヘッダーの幅
    */
@@ -19,62 +36,48 @@ export interface CommentViewHeaderProps {
   height: number;
 }
 
-export function CommentViewHeader(props: CommentViewHeaderProps) {
-  const columnsTemp = useAppSelector(state => state.header.columnsTemp);
+export function useHeaderState(headerWidth: number, headerHeight: number) {
+  const columnWidth = headerWidth - SCROLL_BAR_WIDTH;
 
-  const { headerColumns, partitionMouseDown } = useCommentViewHeaderState(props.width - SCROLL_BAR_WIDTH);
-  const lastIndex = headerColumns.length - 1;
+  //#region HeaderColumnState の設定
+  const [headerColumns, setHeaderColumns] = useState(initialHeaderColumnState.columns);
+  const [headerColumnsTemp, setHeaderColumnsTemp] = useState(initialHeaderColumnState.columnsTemp);
+  const [flexIndex] = useState(initialHeaderColumnState.flexIndex);
 
-  return (
-    <div
-      className="comment-view-header"
-      css={css`
-      height: ${props.height}px;
-      `}
-    >
-      {(columnsTemp ?? headerColumns).map((column, i) => (
-        <React.Fragment key={column.type}>
-          <div
-            className="comment-view-header-item"
-            style={{ width: column.width }}
-            css={css`
-            min-width: ${HEADER_COL_MIN_WIDTH}px;
-            `}
-          >
-            <div className="comment-view-header-item-content">{column.type}</div>
-            {i === lastIndex ? undefined :
-              <div
-                className="comment-view-header-item-partition"
-                onMouseDown={e => partitionMouseDown(e, i)}
-              />}
-          </div>
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
+  const setWidth = useCallback((index: number, width: number) => {
+    setHeaderColumns(oldState => {
+      const newState = oldState.slice();
+      newState[index].width = width;
+      return newState;
+    });
+  }, []);
 
-function useCommentViewHeaderState(width: number) {
+  const setWidthAndFlexWidth = useCallback((index: number, width: number, flexWidth: number) => {
+    setHeaderColumns(oldState => {
+      const newState = oldState.slice();
+      newState[index].width = width;
+      newState[flexIndex].width = flexWidth;
+      return newState;
+    });
+  }, [flexIndex]);
+  //#endregion HeaderColumnState の設定
+
+
   const [resizeTemp, setResizeTemp] = useState<ResizeTemp | null>(null);
   const [resetedPartionEvent, setResetedPartionEvent] = useState(false);
   const [removeEventListener, setRemoveEventListener] = useState<(() => void) | null>(null);
 
-  const columnsTemp = useAppSelector(state => state.header.columnsTemp);
-  const headerColumns = useAppSelector(state => state.header.columns);
-  const flexIndex = useAppSelector(state => state.header.flexIndex);
-  const dispatch = useDispatch();
-
   // 横幅の再調整
   useEffect(() => {
-    const oldWidth = headerColumns.reduce((s, v) => s - v.width, width);
+    const oldWidth = headerColumns.reduce((s, v) => s - v.width, columnWidth);
     if (oldWidth === 0) return;
 
     const flexWidth = headerColumns[flexIndex].width + oldWidth;
-    dispatch(setWidth(flexIndex, flexWidth));
-  }, [dispatch, flexIndex, headerColumns, width]);
+    setWidth(flexIndex, flexWidth);
+  }, [setWidth, flexIndex, headerColumns, columnWidth]);
 
   useEffect(() => {
-    if (!resetedPartionEvent || resizeTemp == null || columnsTemp == null) return;
+    if (!resetedPartionEvent || resizeTemp == null || headerColumnsTemp == null) return;
     setResetedPartionEvent(false);
 
     const changeWidths = (clientX: number, isFinish: boolean): void => {
@@ -100,9 +103,9 @@ function useCommentViewHeaderState(width: number) {
       }
 
       if (isFinish) {
-        dispatch(setWidthAndFlexWidth(resizeTemp.index, width, flexWidth));
+        setWidthAndFlexWidth(resizeTemp.index, width, flexWidth);
       } else {
-        const columns = [...columnsTemp];
+        const columns = [...headerColumnsTemp];
         columns[resizeTemp.index] = {
           ...columns[resizeTemp.index],
           width,
@@ -112,7 +115,7 @@ function useCommentViewHeaderState(width: number) {
           width: flexWidth,
         };
         columns[flexIndex].width = flexWidth;
-        dispatch(setColumnsTemp(columns));
+        setHeaderColumnsTemp(columns);
       }
     };
 
@@ -123,7 +126,7 @@ function useCommentViewHeaderState(width: number) {
     const onMouseUp = (e: MouseEvent) => {
       changeWidths(e.clientX, true);
       setResizeTemp(null);
-      dispatch(setColumnsTemp(null));
+      setHeaderColumnsTemp(null);
 
       removeEventListener();
     };
@@ -139,7 +142,7 @@ function useCommentViewHeaderState(width: number) {
     };
 
     setRemoveEventListener(() => removeEventListener);
-  }, [dispatch, flexIndex, resizeTemp, columnsTemp, resetedPartionEvent]);
+  }, [setWidthAndFlexWidth, flexIndex, resizeTemp, headerColumnsTemp, resetedPartionEvent]);
 
   const partitionMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
@@ -155,15 +158,20 @@ function useCommentViewHeaderState(width: number) {
         startX: e.clientX,
         left,
       });
-      dispatch(setColumnsTemp(headerColumns));
+      setHeaderColumnsTemp(headerColumns);
 
       setResetedPartionEvent(true);
     },
-    [dispatch, flexIndex, headerColumns, removeEventListener]
+    [removeEventListener, flexIndex, headerColumns]
   );
 
   return {
+    // width: headerWidth,
+    height: headerHeight,
+
     headerColumns,
+    headerColumnsTemp,
+
     partitionMouseDown,
   };
 }

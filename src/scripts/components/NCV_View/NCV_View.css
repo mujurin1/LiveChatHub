@@ -1,13 +1,13 @@
 /* #region CommentViewHeader */
 
-.comment-view-header {
+.ncv-view-header {
   display: flex;
   align-items: center;
   text-align: center;
   background-color: #ccc;
 }
 
-.comment-view-header-item {
+.ncv-view-header-item {
   position: relative;
   display: flex;
   justify-content: center;
@@ -16,14 +16,14 @@
   user-select: none;
 }
 
-.comment-view-header-item-content {
+.ncv-view-header-item-content {
   font-size: 18px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: clip;
 }
 
-.comment-view-header-item-partition {
+.ncv-view-header-item-partition {
   position: absolute;
   top: 0;
   right: 0;
@@ -34,7 +34,7 @@
   cursor: col-resize;
 }
 
-.comment-view-header-item-partition::before {
+.ncv-view-header-item-partition::before {
   content: "";
   position: absolute;
   min-width: 15px;
@@ -48,12 +48,12 @@
 
 /* #region CommentView */
 
-.comment-view-body {
+.ncv-view-body {
   display: flex;
   flex-flow: column;
 }
 
-.comment-view-item {
+.ncv-view-item {
   display: flex;
   border-bottom: dotted;
   box-sizing: border-box;
@@ -63,14 +63,16 @@
   min-height: 40px;
 }
 
-.comment-view-item-content {}
+.ncv-view-item-content {
+  overflow-wrap: break-word;
+}
 
 /* 
-.comment-view-item:nth-child(even) {
+.ncv-view-item:nth-child(even) {
   background: #add8e6;
 }
 
-.comment-view-item:nth-child(odd) {
+.ncv-view-item:nth-child(odd) {
   background: #e0ffff;
 } */
 
