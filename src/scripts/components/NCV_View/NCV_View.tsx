@@ -80,7 +80,7 @@ function createCommentViewRow(columns: ColumnState[], columnsTemp: ColumnState[]
           <div
             className="ncv-view-item-content"
             key={state.type}
-            style={{ width: state.width, height: 130 }}
+            style={{ width: state.width }}
           >
             {`${state.type}${contentId} `}
           </div>

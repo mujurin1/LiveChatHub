@@ -1,7 +1,8 @@
-import { LinkedList, LinkedNode, SetonlyCollection } from "@lch/common";
+import { SetonlyCollection } from "@lch/common";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { MIN_ROW_HEIGHT } from "./VirtualList";
 import { RowLayout } from "./RowLayout";
+import { LinkedNode, LinkedList } from "./LinkedList";
 
 
 export type VirtualListState = ReturnType<typeof useVirtualListState>;
@@ -80,30 +81,23 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     //   return;
     // }
 
-    rowLayoutNodeRef.current = {
-      value: RowLayout.new(
+    rowLayoutNodeRef.current = LinkedList.new(
+      RowLayout.new(
         contentIndex % rowCount,
         contentHeights.keys[contentIndex]
       )
-    };
+    );
 
     let lastNode = rowLayoutNodeRef.current;
     let sumRowHeight = -rowTop + contentHeights.values[contentIndex];
 
     for (let i = 1; i < rowCount; i++) {
       contentIndex += 1;
-      let node: RowLayoutNode;
-
-      if (sumRowHeight < viewportHeight) {
-        node = {
-          value: RowLayout.new(
-            contentIndex % rowCount,
-            contentHeights.keys[contentIndex]
-          )
-        };
-      } else {
-        node = { value: { rowKey: contentIndex % rowCount } };
-      }
+      const node = LinkedList.new(
+        sumRowHeight >= viewportHeight
+          ? { rowKey: contentIndex % rowCount }
+          : RowLayout.new(contentIndex % rowCount, contentHeights.keys[contentIndex])
+      );
 
       lastNode.next = node;
       lastNode = node;
@@ -182,7 +176,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     //#region 変更された行が表示範囲 (を含む) より上の場合はスクロール位置を調整する
     const contentIndex = contentHeights.keyIndexes[contentId];
     const renderBottomContentId = LinkedList
-      .find(rowLayoutNode, node => node.next!.value.contentId == null)!
+      .find(rowLayoutNode, node => node.next?.value?.contentId == null)!
       .value.contentId!;
     const renderBottomContentIndex = contentHeights.keyIndexes[renderBottomContentId];
     if (contentIndex < renderBottomContentIndex) {

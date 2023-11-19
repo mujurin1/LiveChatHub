@@ -1,7 +1,7 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import { VirtualListState } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
-import { LinkedList } from "@lch/common";
+import { LinkedList } from "./LinkedList";
 
 import "./VirtualList.css";
 
