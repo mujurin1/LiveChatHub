@@ -50,11 +50,14 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
    * @param source 再計算をする原因
    */
   const refreshRowLayout = useCallback((source: "any" | "scroll") => {
-    const rowLayoutNode = rowLayoutNodeRef.current;
+    // 以下の TODO: 最適化の部分 関連
+    // const rowLayoutNode = rowLayoutNodeRef.current;
     const rowCount = rowCountRef.current;
     const viewportHeight = viewportHeightRef.current;
 
-    const oldTopContentId = rowLayoutNode?.value.contentId;
+
+    // 以下の TODO: 最適化の部分 関連
+    // const oldTopContentId = rowLayoutNode?.value.contentId;
     let contentIndex = 0;
     let rowTop = viewportScrollTopRef.current;
 

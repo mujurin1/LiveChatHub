@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useAppSelector } from "../store";
 import { CommentViewHeader } from "./CommentViewHeader";
 import { VirtualList, RowRender, useVirtualListState } from "@lch/virtual-list";
+import { selectColumns, selectGhostColumns } from "../slices/headerSlice";
 
 import "./CommentView.css";
-import { selectColumns, selectGhostColumns } from "../slices/headerSlice";
 
 export * from "./CommentViewHeader";
 
@@ -74,8 +74,6 @@ export function CommentView(props: CommentViewProps) {
   );
 }
 
-const heightMap = new Map<string, number>();
-
 function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
   const columns = useAppSelector(selectColumns);
   const goastColumns = useAppSelector(selectGhostColumns);
@@ -90,36 +88,53 @@ function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
           key={state.type}
           style={{ width: state.width }}
         >
-          {`${state.type}${contentId} `.repeat(10)}
+          {`${state.type}${contentId} `}
         </div>
       ))}
     </div>
   );
 }
 
-function CommentViewRow_({ contentId }: Parameters<RowRender>[0]) {
-  const [height, setHeight] = useState(heightMap.get(contentId) ?? 40);//+ rowKey * 3);
+// const heightMap = new Map<string, number>();
 
-  const [text, setText] = useState("");
+// function CommentViewRow_({ contentId }: Parameters<RowRender>[0]) {
+//   const [height, setHeight] = useState(heightMap.get(contentId) ?? 40);//+ rowKey * 3);
 
-  return (
-    <div className="comment-view-item" style={{ height }} >
-      <div>{`id-${contentId}  height:${height}`}</div>
-      <input
-        type="range"
-        value={height}
-        min={40}
-        max={300}
-        onChange={e => {
-          heightMap.set(contentId, +e.target.value);
-          setHeight(+e.target.value);
-        }} />
-      <input
-        type="text"
-        value={text}
-        onChange={e => setText(e.target.value)}
-      />
-      value: {text}
-    </div>
-  );
+//   const [text, setText] = useState("");
+
+//   return (
+//     <div className="comment-view-item" style={{ height }} >
+//       <div>{`id-${contentId}  height:${height}`}</div>
+//       <input
+//         type="range"
+//         value={height}
+//         min={40}
+//         max={300}
+//         onChange={e => {
+//           heightMap.set(contentId, +e.target.value);
+//           setHeight(+e.target.value);
+//         }} />
+//       <input
+//         type="text"
+//         value={text}
+//         onChange={e => setText(e.target.value)}
+//       />
+//       value: {text}
+//     </div>
+//   );
+// }
+
+
+
+
+function CommentViewRow__({ contentId }: Parameters<RowRender>[0]) {
+  const commentRowState = getCommentRowState();
+  const commentData = getCommentData(contentId);
+  const CommentRowComponent = getRowComponent(commentData.siteType);
+
+  return <CommentRowComponent state={commentRowState} commentData={commentData} />;
 }
+
+
+
+
