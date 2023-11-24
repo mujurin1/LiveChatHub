@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { VirtualListState } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
 import { LinkedList } from "./LinkedList";
@@ -36,19 +36,20 @@ export function VirtualList(props: VirtualListProps) {
     }
   }), [updateRowHeight]);
 
-  const rows = useMemo(
-    () => LinkedList.map(rowLayoutNode, node => (
-      <VirtualListRow
-        key={node.value.rowKey}
-        rowLayout={node.value}
-        resizeObserver={resizeObserver}
-        RowRender={RowRender}
-      />
-    )),
-    // resizeObserbre, rowLayouts は再生成されない可変なオブジェクト
-    // updatedRowLayoutVersion は rowLayouts が変化したことを通知するオブジェクト
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [RowRender, updatedRowLayoutVersion]);
+  // const rows = useMemo(
+  //   () => LinkedList.map(rowLayoutNode, node => (
+  //     <VirtualListRow
+  //       key={node.value.rowKey}
+  //       rowLayout={node.value}
+  //       state={props.state}
+  //       resizeObserver={resizeObserver}
+  //       RowRender={RowRender}
+  //     />
+  //   )),
+  //   // resizeObserbre, rowLayouts は再生成されない可変なオブジェクト
+  //   // updatedRowLayoutVersion は rowLayouts が変化したことを通知するオブジェクト
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   [RowRender, updatedRowLayoutVersion]);
 
   return (
     <div
@@ -63,7 +64,18 @@ export function VirtualList(props: VirtualListProps) {
         className="virtual-list-lineup"
         style={{ top: renderRowTop }}
       >
-        {rows}
+        {/* {rows} */}
+        {
+          LinkedList.map(rowLayoutNode, node => (
+            <VirtualListRow
+              key={node.value.rowKey}
+              rowLayout={node.value}
+              state={props.state}
+              resizeObserver={resizeObserver}
+              RowRender={RowRender}
+            />
+          ))
+        }
       </div>
     </div>
   );
@@ -71,6 +83,7 @@ export function VirtualList(props: VirtualListProps) {
 
 
 interface VirtualListRowProps {
+  state: VirtualListState;
   rowLayout: RowLayout;
   resizeObserver: ResizeObserver;
   RowRender: RowRender;
@@ -97,7 +110,10 @@ function VirtualListRow(props: VirtualListRowProps) {
     >
       {
         rowLayout.contentId != null
-          ? <RowRender key={rowLayout.contentId} contentId={rowLayout.contentId} />
+          ? <RowRender
+            key={rowLayout.contentId}
+            contentId={rowLayout.contentId}
+          />
           : undefined
       }
     </div>

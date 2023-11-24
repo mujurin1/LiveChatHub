@@ -77,7 +77,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     //       というか、分割統治法の部分と被るので後回し‥
     // // スクロールによる再計算の場合は、一番上の行が同じなら rowLayouts は変更する必要がない
     // if (source === "scroll" && contentHeights.keys[contentIndex] === oldTopContentId) {
-    //   updatedAny();
+    //   // updatedAny();
     //   return;
     // }
 
@@ -104,7 +104,8 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
       sumRowHeight += contentHeights.values[contentIndex];
     }
 
-    updatedRowLayout();
+    updatedAny();
+    // updatedRowLayout();
   }, []);
 
   const scrollTo = useCallback((toY: number | "bottom") => {
@@ -125,33 +126,68 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
 
     refreshRowLayout(source);
 
-    updatedAny();
+    // updatedAny();
   }, []);
 
-  const addContent = useCallback((contentId: string) => {
-    // 行の最初の幅を見えないギリギリのサイズにすることで
-    // 行が描画される → 幅が更新される → 行が再描画される
-    // によるガクガク感を無くす
-    const height = 0.0625;
+  const addContent = useCallback((contentId: string, initialHeight: number | undefined = undefined) => {
+    const scroll = scrollRef.current!;
+    const viewportHeight = viewportHeightRef.current;
+    const autoScroll = autoScrollRef.current;
+
+    const bottom = (sumContentHeightRef.current) - viewportHeight;
+    // ここの +3 は拡大率が 100% でない時の誤差を埋めるための値
+    // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
+    const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
+    if (initialHeight == null) {
+      // 行の最初の幅を体感できない程度の小さいサイズにすることで、
+      // 「行が描画される → 幅が更新される → 行が再描画される」
+      // によるガクガク感を無くす
+      // ただし
+      initialHeight = isAutoScroll ? 0.0625 : MIN_ROW_HEIGHT;
+    }
+
+    contentHeights.set(contentId, initialHeight);
+    sumContentHeightRef.current += initialHeight;
+
+    scroll.style.height = `${sumContentHeightRef.current}px`;
+
+
+    if (isAutoScroll && autoScroll) scrollTo("bottom");
+    else updatedAny();
+  }, []);
+
+  const addContents = useCallback((contentIds: string[], initialHeight: number | undefined = undefined) => {
+    // initialHeight: 多量のコメントが追加された場合スクロール更新に時間がかかるので大きめに取る
+    //                ただし大きすぎると途中の行が表示されない場合がある
+    //                (1度も描画されずに高さが合わない)
 
     const scroll = scrollRef.current!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
 
-    contentHeights.set(contentId, height);
-    sumContentHeightRef.current += height;
-
-    scroll.style.height = `${sumContentHeightRef.current}px`;
-
-    const bottom = (sumContentHeightRef.current) - viewportHeight - height;
-
+    const bottom = (sumContentHeightRef.current) - viewportHeight;
     // ここの +3 は拡大率が 100% でない時の誤差を埋めるための値
     // スクロールイベントの発生原因がプログラムだと判定できれば +3 は要らない
     const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
+    if (initialHeight == null) {
+      // 行の最初の幅を体感できない程度の小さいサイズにすることで、
+      // 「行が描画される → 幅が更新される → 行が再描画される」
+      // によるガクガク感を無くす
+      // ただし
+      initialHeight = isAutoScroll ? 0.0625 : MIN_ROW_HEIGHT;
+    }
+
+    for (const contentId of contentIds)
+      contentHeights.set(contentId, initialHeight);
+    const sum = contentIds.length * initialHeight;
+
+    sumContentHeightRef.current += sum;
+
+    scroll.style.height = `${sumContentHeightRef.current}px`;
+
 
     if (isAutoScroll && autoScroll) scrollTo("bottom");
-
-    updatedAny();   // scrollTo が実行されたとしても必要
+    else updatedAny();
   }, []);
 
   const updateRowHeight = useCallback((contentId: string, height: number) => {
@@ -194,7 +230,8 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     if (isAutoScroll && autoScroll) scrollTo("bottom");
     else refreshRowLayout("any");
 
-    updatedAny();
+    console.log(contentHeights.values.at(-1));
+
   }, []);
 
 
@@ -253,15 +290,20 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
       // console.log(`viewport scrollTop:   old: ${oldScrollTop}   ${viewport.scrollTop}`);
     }
 
-    rowCountRef.current = Math.max(
-      rowCountRef.current,
-      Math.floor((propHeight) / MIN_ROW_HEIGHT) + 2
-    );
+    // TODO: コンテンツIDと行キーが余りずれないように
+    //       行の最大行数より少なくても表示行数は固定していたけど要らない‥?
+    // rowCountRef.current = Math.max(
+    //   Math.min(rowCountRef.current, 30),
+    //   Math.min(
+    //     Math.floor((propHeight) / MIN_ROW_HEIGHT) + 2
+    //   )
+    // );
+    rowCountRef.current = Math.floor((propHeight) / MIN_ROW_HEIGHT) + 2;
 
     if (contentHeights.length !== 0)
       refreshRowLayout("any");
 
-    updatedAny();
+    // updatedAny();
     // 引数で受け取ったビューポートの高さを元に再計算するため propsHeight を指定する
   }, [propHeight]);
 
@@ -306,6 +348,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     renderRowTop: renderRowTopRef.current,
 
     addContent,
+    addContents,
     updateRowHeight,
     scrollTo,
   };
@@ -323,7 +366,7 @@ function useCustomHook() {
     setAny(x => x + 1);
   }, []);
   const updatedRowLayout = useCallback(() => {
-    setRowLayout(x => x + 1);
+    // setRowLayout(x => x + 1);
     setAny(x => x + 1);
   }, []);
 

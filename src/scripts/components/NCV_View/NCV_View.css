@@ -58,9 +58,8 @@
   border-bottom: dotted;
   box-sizing: border-box;
   border-width: 1px;
-  background-color: #b7e8fd;
+  /* background-color: #b7e8fd; */
   font-size: 20px;
-  min-height: 40px;
 }
 
 .ncv-view-item-content {

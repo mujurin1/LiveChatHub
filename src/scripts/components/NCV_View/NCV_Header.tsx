@@ -1,12 +1,14 @@
 import React from "react";
 import { css } from "@emotion/react";
-import { HEADER_COL_MIN_WIDTH, HeaderState } from "./HeaderState";
+import { HEADER_COL_MIN_WIDTH, NCV_HeaderState } from "./NCV_HeaderState";
 
-export interface HeaderProps {
-  state: HeaderState;
+export * from "./NCV_HeaderState";
+
+export interface NCV_HeaderProps {
+  state: NCV_HeaderState;
 }
 
-export function Header(props: HeaderProps) {
+export function NCV_Header(props: NCV_HeaderProps) {
   const {
     height,
 

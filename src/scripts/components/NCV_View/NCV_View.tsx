@@ -1,91 +1,64 @@
-import { useMemo, useState } from "react";
-import { Header } from "./Header";
-import { VirtualList, RowRender, useVirtualListState } from "@lch/virtual-list";
-import { ColumnState, useHeaderState } from "./HeaderState";
+import { VirtualList } from "@lch/virtual-list";
+import { NCV_ViewState } from "./NCV_ViewState";
+import { ColumnState, NCV_Header } from "./NCV_Header";
 
 import "./NCV_View.css";
 
-export * from "./Header";
+export * from "./NCV_Header";
+export * from "./NCV_ViewState";
 
-export interface NCV_ViewProps {
-  height: number;
-  width: number;
+export interface NCV_CommentProps {
+  contentId: string;
+  columnState: ColumnState;
 }
+export type NCV_Comment = (props: NCV_CommentProps) => JSX.Element;
 
-let contentId = 0;
-export function NCV_View(props: NCV_ViewProps) {
-  const [autoScroll, setAutoScroll] = useState(true);
+export function NCV_View({ state }: { state: NCV_ViewState; }) {
+  const {
+    virtualListState,
+    headerState,
+    autoScroll,
 
-  const state = useVirtualListState(props.height, autoScroll);
-  const headerState = useHeaderState(props.width, 50);
+    setAutoScroll,
+    rowRender,
+  } = state;
+
   const realityColumns = headerState.headerColumns.map(x => x.width);
   const tempColumns = headerState.headerColumnsTemp?.map(x => x.width);
 
-  const RowRender = useMemo(() => {
-    return createCommentViewRow(headerState.headerColumns, headerState.headerColumnsTemp);
-  }, [headerState.headerColumns, headerState.headerColumnsTemp]);
-
-
   return (
-    <div>
+    <>
       <div className="ncv-view-body">
-        <Header
+        <NCV_Header
           state={headerState}
         />
         <VirtualList
-          state={state}
-          rowRender={RowRender}
+          state={virtualListState}
+          rowRender={rowRender}
         />
       </div>
 
-      <div>
-        <input type="number" id="input_text" />
-        <button onClick={() => {
-          state.addContent(`${contentId++}`);
-        }}>追加</button>
+      <label htmlFor="autoScroll">自動スクロール</label>
+      <input
+        id="autoScroll"
+        type="checkbox"
+        checked={autoScroll}
+        onChange={e => setAutoScroll(e.target.checked)}
+      />
 
-        <label htmlFor="autoScroll">自動スクロール</label>
-        <input
-          id="autoScroll"
-          type="checkbox"
-          checked={autoScroll}
-          onChange={e => setAutoScroll(e.target.checked)}
-        />
-
-        <label htmlFor="userScroll">ユーザースクロール</label>
-        <input
-          id="userScroll"
-          type="checkbox"
-          defaultChecked={state.__dbg_user_scroll_ref.current}
-          onChange={e => state.__dbg_user_scroll_ref.current = e.target.checked}
-        />
-      </div>
+      <label htmlFor="userScroll">ユーザースクロール</label>
+      <input
+        id="userScroll"
+        type="checkbox"
+        defaultChecked={virtualListState.__dbg_user_scroll_ref.current}
+        onChange={e => virtualListState.__dbg_user_scroll_ref.current = e.target.checked}
+      />
 
       <div style={{ fontSize: 32 }}>
-        <div>realityColumns: {realityColumns.join()}</div>
-        <div>tempColumns: {tempColumns?.join() ?? "null"}</div>
+        <label>realityColumns: {realityColumns.join()}</label>
+        {"　"}
+        <label>tempColumns: {tempColumns?.join() ?? "null"}</label>
       </div>
-
-    </div>
+    </>
   );
-}
-
-function createCommentViewRow(columns: ColumnState[], columnsTemp: ColumnState[] | null) {
-  return function CommentViewRow({ contentId }: Parameters<RowRender>[0]) {
-    const steColumn = columnsTemp ?? columns;
-
-    return (
-      <div className="ncv-view-item">
-        {steColumn.map(state => (
-          <div
-            className="ncv-view-item-content"
-            key={state.type}
-            style={{ width: state.width }}
-          >
-            {`${state.type}${contentId} `}
-          </div>
-        ))}
-      </div>
-    );
-  };
 }

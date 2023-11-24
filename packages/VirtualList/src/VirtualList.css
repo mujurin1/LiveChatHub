@@ -1,9 +1,10 @@
 .virtual-list {
-  background-color: #c1eaae;
   position: relative;
   overflow-x: auto;
   overflow-y: scroll;
   box-sizing: border-box;
+
+  background-color: rgb(155, 186, 206);
 }
 
 .virtual-list::-webkit-scrollbar {
@@ -31,7 +32,11 @@
   height: 100%;
 }
 
-.virtual-list-row:has(> *) {
+.virtual-list-row {
   position: relative;
+
+}
+
+.virtual-list-row>* {
   min-height: 40px;
 }

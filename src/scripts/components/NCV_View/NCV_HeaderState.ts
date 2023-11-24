@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export type ColumnType = "no" | "icon" | "name" | "time" | "content" | "info";
 export type ColumnState = { type: ColumnType; width: number; };
 
-export interface HeaderColumnState {
+export interface NCV_HeaderColumnState {
   columns: ColumnState[];
   columnsTemp: ColumnState[] | null;
   flexIndex: number;
@@ -12,20 +12,20 @@ export interface HeaderColumnState {
 export const HEADER_COL_MIN_WIDTH = 20;
 export const SCROLL_BAR_WIDTH = 10;
 
-const initialHeaderColumnState: HeaderColumnState = {
+const initialHeaderColumnState: NCV_HeaderColumnState = {
   columns: [
-    { type: "icon", width: 100 },
-    { type: "name", width: 100 },
-    { type: "time", width: 100 },
+    { type: "icon", width: 180 },
+    { type: "name", width: 180 },
+    { type: "time", width: 180 },
     { type: "content", width: 100 },
   ],
   columnsTemp: null,
   flexIndex: 3,
 };
 
-export type HeaderState = ReturnType<typeof useHeaderState>;
+export type NCV_HeaderState = ReturnType<typeof useHeaderState>;
 
-export interface HeaderProps {
+export interface NCV_HeaderProps {
   /**
    * ヘッダーの幅
    */
@@ -165,7 +165,7 @@ export function useHeaderState(headerWidth: number, headerHeight: number) {
     [removeEventListener, flexIndex, headerColumns]
   );
 
-  return {
+  const returnValue = useMemo(() => ({
     // width: headerWidth,
     height: headerHeight,
 
@@ -173,7 +173,9 @@ export function useHeaderState(headerWidth: number, headerHeight: number) {
     headerColumnsTemp,
 
     partitionMouseDown,
-  };
+  }), [headerColumns, headerColumnsTemp, headerHeight, partitionMouseDown]);
+
+  return returnValue;
 }
 
 
