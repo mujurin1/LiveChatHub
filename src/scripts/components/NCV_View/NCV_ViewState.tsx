@@ -17,7 +17,7 @@ export function useNCV_ViewState(height: number, width: number, comments: Sample
 
   const rowRender = useMemo(() => createCommentViewRow(comments, headerState), [comments, headerState]);
 
-  const addComments = (ids: string[]) => {
+  const addComments = (ids: number[]) => {
     virtualListState.addContents(ids);
   };
 
@@ -37,7 +37,7 @@ function createCommentViewRow(comments: SampleSiteComment[], headerState: NCV_He
   const steColumns = headerState.headerColumnsTemp ?? headerState.headerColumns;
 
   return function RowRender({ contentId }: Parameters<RowRender>[0]) {
-    const comment = comments[+contentId];
+    const comment = comments[contentId];
 
     return (
       <div className="ncv-view-item" style={{ minHeight: 40 }}>
@@ -55,8 +55,6 @@ function createCommentViewRow(comments: SampleSiteComment[], headerState: NCV_He
                       state.type === "content" ? comment.message :
                         ""
             }
-            {/* <NCV_Comment columnState={state} contentId={contentId} /> */}
-            {/* <NCV_Comment columnState={state} comment={comments[+contentId]} /> */}
           </div>
         ))}
       </div>

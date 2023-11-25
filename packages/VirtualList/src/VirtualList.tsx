@@ -5,7 +5,7 @@ import { LinkedList } from "./LinkedList";
 
 import "./VirtualList.css";
 
-export type RowRender = (props: { contentId: string; }) => JSX.Element;
+export type RowRender = (props: { contentId: number; }) => JSX.Element;
 
 export const MIN_ROW_HEIGHT = 40;
 
@@ -28,9 +28,9 @@ export function VirtualList(props: VirtualListProps) {
   const resizeObserver = useMemo(() => new ResizeObserver(elements => {
     for (const element of elements) {
       const target = element.target as HTMLElement;
-      const contentId = target.dataset.contentId;
+      const contentId = parseInt(target.dataset.contentId!);
 
-      if (contentId == null) return;
+      if (isNaN(contentId)) return;
 
       updateRowHeight(contentId, target.clientHeight);
     }

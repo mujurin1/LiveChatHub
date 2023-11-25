@@ -45,7 +45,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   const rowLayoutNodeRef = useRef<RowLayoutNode | null>(null);
   // const rowLayoutNode = useMemo<RowLayoutNode | null>(() => null, []);
   /** { contentId: `contentId` の行の描画後の高さ }[] */
-  const contentHeights = useMemo(() => new SetonlyCollection<number>(), []);
+  const contentHeights = useMemo(() => new SetonlyCollection<number, number>(), []);
 
   /**
    * @param source 再計算をする原因
@@ -129,7 +129,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     // updatedAny();
   }, []);
 
-  const addContent = useCallback((contentId: string, initialHeight: number | undefined = undefined) => {
+  const addContent = useCallback((contentId: number, initialHeight: number | undefined = undefined) => {
     const scroll = scrollRef.current!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
@@ -156,7 +156,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     else updatedAny();
   }, []);
 
-  const addContents = useCallback((contentIds: string[], initialHeight: number | undefined = undefined) => {
+  const addContents = useCallback((contentIds: number[], initialHeight: number | undefined = undefined) => {
     // initialHeight: 多量のコメントが追加された場合スクロール更新に時間がかかるので大きめに取る
     //                ただし大きすぎると途中の行が表示されない場合がある
     //                (1度も描画されずに高さが合わない)
@@ -189,7 +189,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     else updatedAny();
   }, []);
 
-  const updateRowHeight = useCallback((contentId: string, height: number) => {
+  const updateRowHeight = useCallback((contentId: number, height: number) => {
     const rowLayoutNode = rowLayoutNodeRef.current;
     if (rowLayoutNode == null) return;
 

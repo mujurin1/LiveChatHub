@@ -4,11 +4,11 @@ export interface RowLayout {
   /**
    * 表示するコンテンツのID
    */
-  contentId?: string;
+  contentId?: number;
 }
 
 export const RowLayout = {
-  new: (rowKey: number, contentId?: string): RowLayout => {
+  new: (rowKey: number, contentId?: number): RowLayout => {
     return { rowKey, contentId };
   },
 };

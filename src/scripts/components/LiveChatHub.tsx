@@ -16,10 +16,10 @@ export function LiveChatHub() {
 
   useEffect(() => {
     const func: Parameters<typeof connectorManager.onReceiveComments.add>[0] = (connector, newComments) => {
-      const ids: string[] = [];
+      const ids: number[] = [];
       const index = comments.length;
       for (let i = 0; i < newComments.length; i++) {
-        ids.push(`${index + i}`);
+        ids.push(index + i);
       }
 
       setComments(oldComments => [...oldComments, ...newComments]);
