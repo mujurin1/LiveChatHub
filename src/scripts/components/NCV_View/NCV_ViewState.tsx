@@ -5,11 +5,15 @@ import { NCV_CommentProps } from "./NCV_View";
 
 
 export type NCV_ViewState = ReturnType<typeof useNCV_ViewState>;
+
 export function useNCV_ViewState(height: number, width: number) {
+  // 後で無くすコメント欄下のエリア分引いておく
+  height -= 70;
+
   const [autoScroll, setAutoScroll] = useState(true);
 
-  const virtualListState = useVirtualListState(height, autoScroll);
   const headerState = useHeaderState(width, 50);
+  const virtualListState = useVirtualListState(height - 50, autoScroll);
 
   const rowRender = useMemo(() => createCommentViewRow(headerState), [headerState]);
 

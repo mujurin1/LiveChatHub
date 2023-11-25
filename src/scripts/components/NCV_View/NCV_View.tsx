@@ -38,26 +38,28 @@ export function NCV_View({ state }: { state: NCV_ViewState; }) {
         />
       </div>
 
-      <label htmlFor="autoScroll">自動スクロール</label>
-      <input
-        id="autoScroll"
-        type="checkbox"
-        checked={autoScroll}
-        onChange={e => setAutoScroll(e.target.checked)}
-      />
+      <div style={{ backgroundColor: "#64ffb9", height: 70 }}>
+        <label htmlFor="autoScroll">自動スクロール</label>
+        <input
+          id="autoScroll"
+          type="checkbox"
+          checked={autoScroll}
+          onChange={e => setAutoScroll(e.target.checked)}
+        />
 
-      <label htmlFor="userScroll">ユーザースクロール</label>
-      <input
-        id="userScroll"
-        type="checkbox"
-        defaultChecked={virtualListState.__dbg_user_scroll_ref.current}
-        onChange={e => virtualListState.__dbg_user_scroll_ref.current = e.target.checked}
-      />
+        <label htmlFor="userScroll">ユーザースクロール</label>
+        <input
+          id="userScroll"
+          type="checkbox"
+          defaultChecked={virtualListState.__dbg_user_scroll_ref.current}
+          onChange={e => virtualListState.__dbg_user_scroll_ref.current = e.target.checked}
+        />
 
-      <div style={{ fontSize: 32 }}>
-        <label>realityColumns: {realityColumns.join()}</label>
-        {"　"}
-        <label>tempColumns: {tempColumns?.join() ?? "null"}</label>
+        <div style={{ fontSize: 32 }}>
+          <label>realityColumns: {realityColumns.join()}</label>
+          {"　"}
+          <label>tempColumns: {tempColumns?.join() ?? "null"}</label>
+        </div>
       </div>
     </>
   );
