@@ -1,6 +1,7 @@
 import { Trigger } from "@lch/common";
 import { SampleSiteComment, SampleSiteConnector } from "./SampleSiteConnector";
 import { useMemo, useState } from "react";
+import { FeedData } from "./FeedData";
 
 export function useConnectorManager() {
   const [, changed] = useState(0);
@@ -20,7 +21,7 @@ export class ConnectorManager {
 
   public onConnectorChange = new Trigger();
 
-  public onReceiveComments = new Trigger<[SampleSiteConnector, SampleSiteComment[]]>();
+  public onReceiveComments = new Trigger<[string, FeedData[]]>();
 
 
   /**
@@ -34,8 +35,8 @@ export class ConnectorManager {
     if (this.connectors.has(connectionId)) return true;
 
     const connector = new SampleSiteConnector(connectionId);
-    connector.onCommentReceive.add(comments => {
-      this.commentReceive(connector, comments);
+    connector.onCommentReceive.add(contents => {
+      this.commentReceive(connector.connectionId, contents);
     });
 
     this.connectors.set(connectionId, connector);
@@ -55,7 +56,16 @@ export class ConnectorManager {
     this.onConnectorChange.fire();
   }
 
-  private commentReceive(connector: SampleSiteConnector, comments: SampleSiteComment[]) {
-    this.onReceiveComments.fire(connector, comments);
+
+
+  private nextCommentId = 0;
+
+  private commentReceive(connectorId: string, contents: SampleSiteComment[]) {
+    const comments = contents.map<FeedData>(content => ({
+      id: this.nextCommentId++,
+      content,
+    }));
+
+    this.onReceiveComments.fire(connectorId, comments);
   }
 }

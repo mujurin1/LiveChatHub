@@ -3,6 +3,7 @@ import { useWidnowSize } from "../hooks/useWidnowSize";
 import { NCV_View, useNCV_ViewState } from "./NCV_View/NCV_View";
 import { ConnectorManager, useConnectorManager } from "../connectors/ConnectorManager";
 import { SampleSiteComment } from "../connectors/SampleSiteConnector";
+import { FeedData } from "../connectors/FeedData";
 
 const HEAD_AREA_HEIGHT = 100;
 
@@ -10,19 +11,19 @@ export function LiveChatHub() {
   const { windowWidth, windowHeight } = useWidnowSize();
 
   const connectorManager = useConnectorManager();
-  const [comments, setComments] = useState<SampleSiteComment[]>([]);
+  const [feedDatas, setFeedDatas] = useState<FeedData[]>([]);
 
-  const ncvViewState = useNCV_ViewState(windowHeight - HEAD_AREA_HEIGHT, windowWidth, comments);
+  const ncvViewState = useNCV_ViewState(windowHeight - HEAD_AREA_HEIGHT, windowWidth, feedDatas);
 
   useEffect(() => {
-    const func: Parameters<typeof connectorManager.onReceiveComments.add>[0] = (connector, newComments) => {
+    const func: Parameters<typeof connectorManager.onReceiveComments.add>[0] = (connector, newFeeds) => {
       const ids: number[] = [];
-      const index = comments.length;
-      for (let i = 0; i < newComments.length; i++) {
+      const index = feedDatas.length;
+      for (let i = 0; i < newFeeds.length; i++) {
         ids.push(index + i);
       }
 
-      setComments(oldComments => [...oldComments, ...newComments]);
+      setFeedDatas(oldComments => [...oldComments, ...newFeeds]);
 
       ncvViewState.addComments(ids);
     };
@@ -30,7 +31,7 @@ export function LiveChatHub() {
     connectorManager.onReceiveComments.add(func);
 
     return () => connectorManager.onReceiveComments.delete(func);
-  }, [comments.length, connectorManager, ncvViewState]);
+  }, [feedDatas.length, connectorManager, ncvViewState]);
 
   // const [range, setRange] = useState(5);
 
@@ -60,8 +61,8 @@ interface ConnectorViewState {
 }
 
 function ConnectorView({ connectorManager }: ConnectorViewState) {
-  const [liveId1, setLiveid1] = useState("");
-  const [liveId2, setLiveid2] = useState("");
+  const [liveId1, setLiveid1] = useState("a");
+  const [liveId2, setLiveid2] = useState("b");
 
   return (
     <div style={{ height: HEAD_AREA_HEIGHT }}>
