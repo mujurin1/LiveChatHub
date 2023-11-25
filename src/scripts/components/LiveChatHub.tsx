@@ -2,26 +2,35 @@ import { useEffect, useMemo, useState } from "react";
 import { useWidnowSize } from "../hooks/useWidnowSize";
 import { NCV_View, useNCV_ViewState } from "./NCV_View/NCV_View";
 import { ConnectorManager, useConnectorManager } from "../connectors/ConnectorManager";
+import { SampleSiteComment } from "../connectors/SampleSiteConnector";
 
 const HEAD_AREA_HEIGHT = 100;
-let contentId = 1;
 
 export function LiveChatHub() {
   const { windowWidth, windowHeight } = useWidnowSize();
 
-  const ncvViewState = useNCV_ViewState(windowHeight - HEAD_AREA_HEIGHT, windowWidth);
-  const {
-    virtualListState,
-  } = ncvViewState;
-
-
   const connectorManager = useConnectorManager();
+  const [comments, setComments] = useState<SampleSiteComment[]>([]);
+
+  const ncvViewState = useNCV_ViewState(windowHeight - HEAD_AREA_HEIGHT, windowWidth, comments);
 
   useEffect(() => {
-    connectorManager.onReceiveComments.add((connector, comments) => {
-      virtualListState.addContents(comments.map(x => x.id));
-    });
-  }, [connectorManager, virtualListState]);
+    const func: Parameters<typeof connectorManager.onReceiveComments.add>[0] = (connector, newComments) => {
+      const ids: string[] = [];
+      const index = comments.length;
+      for (let i = 0; i < newComments.length; i++) {
+        ids.push(`${index + i}`);
+      }
+
+      setComments(oldComments => [...oldComments, ...newComments]);
+
+      ncvViewState.addComments(ids);
+    };
+
+    connectorManager.onReceiveComments.add(func);
+
+    return () => connectorManager.onReceiveComments.delete(func);
+  }, [comments.length, connectorManager, ncvViewState]);
 
   // const [range, setRange] = useState(5);
 

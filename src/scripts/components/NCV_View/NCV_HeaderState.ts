@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export type ColumnType = "no" | "icon" | "name" | "time" | "content" | "info";
+export type ColumnType = "id" | "no" | "icon" | "name" | "time" | "content" | "info";
 export type ColumnState = { type: ColumnType; width: number; };
 
 export interface NCV_HeaderColumnState {
@@ -14,7 +14,7 @@ export const SCROLL_BAR_WIDTH = 10;
 
 const initialHeaderColumnState: NCV_HeaderColumnState = {
   columns: [
-    { type: "icon", width: 180 },
+    { type: "id", width: 180 },
     { type: "name", width: 180 },
     { type: "time", width: 180 },
     { type: "content", width: 100 },

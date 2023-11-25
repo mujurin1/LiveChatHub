@@ -7,12 +7,6 @@ import "./NCV_View.css";
 export * from "./NCV_Header";
 export * from "./NCV_ViewState";
 
-export interface NCV_CommentProps {
-  contentId: string;
-  columnState: ColumnState;
-}
-export type NCV_Comment = (props: NCV_CommentProps) => JSX.Element;
-
 export function NCV_View({ state }: { state: NCV_ViewState; }) {
   const {
     virtualListState,

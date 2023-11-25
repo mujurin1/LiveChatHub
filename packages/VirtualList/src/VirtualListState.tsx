@@ -160,7 +160,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     // initialHeight: 多量のコメントが追加された場合スクロール更新に時間がかかるので大きめに取る
     //                ただし大きすぎると途中の行が表示されない場合がある
     //                (1度も描画されずに高さが合わない)
-
     const scroll = scrollRef.current!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
