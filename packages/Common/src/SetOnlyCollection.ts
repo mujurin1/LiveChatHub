@@ -7,7 +7,7 @@ import { ReadonlyCollection } from "./ReadonlyCollection";
  */
 export class SetonlyCollection<
   V,
-  K extends number | string = string
+  K extends number | string
 > implements ReadonlyCollection<V, K> {
   readonly keyIndexes: Record<K, number> = {} as Record<K, number>;
   readonly keys: K[] = [];

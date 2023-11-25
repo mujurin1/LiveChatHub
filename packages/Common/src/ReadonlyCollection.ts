@@ -6,7 +6,7 @@ import { Fn } from "./util";
  */
 export interface ReadonlyCollection<
   V,
-  K extends number | string = string
+  K extends number | string
 > {
   /**
    * { Key: Index } のレコード
