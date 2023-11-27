@@ -44,8 +44,8 @@ export class DemoLive {
     this.managedIndex = managedIndex;
     this.connection = new DemoConnection(
       connectId,
-      this.receiveContents.bind(this),
-      this.onStateChange.fire.bind(this.onStateChange)
+      contents => this.receiveContents(contents),
+      state => this.onStateChange.fire(state)
     );
 
     this.title = "";
@@ -63,15 +63,26 @@ export class DemoLive {
     return live;
   }
 
+  public equalConnectId(urlOrId: string): boolean {
+    return this.connectId === DemoLive.urlOrIdParse(urlOrId);
+  }
+
   public static urlOrIdParse(urlOrId: string): string | null {
     const index = urlOrId.indexOf("?");
-    if (index === -1) return urlOrId;
+    if (index === -1) {
+      if (urlOrId.length === 0) return null;
+      return urlOrId;
+    }
 
     const value = urlOrId.substring(0, index);
 
-    if (value.length < 0) return null;
+    if (value.length === 0) return null;
 
     return value;
+  }
+
+  public isConnecting(): boolean {
+    return this.connection.state === "open";
   }
 
   close(): void {
@@ -83,8 +94,8 @@ export class DemoLive {
 
     this.connection = new DemoConnection(
       this.connectId,
-      this.receiveContents.bind(this),
-      this.onStateChange.fire.bind(this.onStateChange)
+      contents => this.receiveContents(contents),
+      state => this.onStateChange.fire(state)
     );
   }
 

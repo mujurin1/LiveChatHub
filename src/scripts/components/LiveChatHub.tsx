@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { LiveManager, useLiveManager } from "../Lives/LiveManager";
 import { TabView } from "./TabView";
 import { css } from "@emotion/react";
+import { liveManager, useLives } from "../services/LiveManager";
 
 export const HEAD_AREA_HEIGHT = 100;
 
 export function LiveChatHub() {
-  const liveManager = useLiveManager();
 
   return (
     <div css={css`
@@ -15,18 +14,19 @@ export function LiveChatHub() {
     display: flex;
     flex-direction: column;
     `}>
-      <ConnectorView liveManager={liveManager} />
-      <TabView liveManager={liveManager} />
+      <ConnectorView />
+      <TabView />
     </div>
   );
 }
 
 interface ConnectorViewState {
-  liveManager: LiveManager;
 }
 
-function ConnectorView({ liveManager }: ConnectorViewState) {
-  const [liveIds, setLiveIds] = useState(["aa?x", "bb?x"]);
+function ConnectorView(_props: ConnectorViewState) {
+  // const lives = useLives();
+  const lives = useLives();
+  const [connectId, setConnectId] = useState("aa?x");
 
   return (
     <div style={{ flex: `0 0 ${HEAD_AREA_HEIGHT}px` }}>
@@ -41,40 +41,38 @@ function ConnectorView({ liveManager }: ConnectorViewState) {
 
         <tbody>
           {
-            liveIds.map((liveId, index) => (
+            lives.map((live, index) => (
               <tr key={index}>
                 <td>サンプルサイト</td>
-                <td>
-                  <input
-                    type="text"
-                    value={liveId}
-                    onChange={e => setLiveIds(oldValue => {
-                      const newValue = [...oldValue];
-                      newValue[index] = e.target.value;
-                      return newValue;
-                    })}
-                    readOnly={liveManager.isConnect(liveId)}
-                  />
-                </td>
+                <td>{live.connectId}</td>
                 <td>
                   <button onClick={(() => {
-                    if (liveManager.isConnect(liveId)) {
-                      liveManager.disconnect(liveId);
+                    if (live.isConnecting()) {
+                      live.close();
                     } else {
-                      const live = liveManager.connect(liveId);
-                      if (live == null) return;
-
-                      setLiveIds(oldValue => {
-                        const newValue = [...oldValue];
-                        newValue[index] = live.connectId;
-                        return newValue;
-                      });
+                      live.reload();
                     }
-                  })}>{liveManager.isConnect(liveId) ? "切断" : "接続"}</button>
+                  })}>
+                    {live.isConnecting() ? "切断" : "再接続"}
+                  </button>
                 </td>
               </tr>
             ))
           }
+
+          <tr>
+            <td>サンプルサイト</td>
+            <td>
+              <input type="text" value={connectId} onChange={e => setConnectId(e.target.value)} />
+            </td>
+            <td>
+              <button onClick={(() => {
+                if (liveManager.connect(connectId)) {
+                  setConnectId("");
+                }
+              })}>{"接続"}</button>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
