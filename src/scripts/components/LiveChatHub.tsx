@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LiveManager, useLiveManager } from "../Lives/LiveManager";
 import { TabView } from "./TabView";
+import { css } from "@emotion/react";
 
 export const HEAD_AREA_HEIGHT = 100;
 
@@ -8,10 +9,14 @@ export function LiveChatHub() {
 
   const liveManager = useLiveManager();
   return (
-    <>
+    <div css={css`
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    `}>
       <ConnectorView liveManager={liveManager} />
       <TabView liveManager={liveManager} />
-    </>
+    </div>
   );
 }
 

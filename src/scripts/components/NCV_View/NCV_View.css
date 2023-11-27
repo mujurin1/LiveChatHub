@@ -49,8 +49,9 @@
 /* #region CommentView */
 
 .ncv-view-body {
+  flex: 1;
   display: flex;
-  flex-flow: column;
+  flex-direction: column;
 }
 
 .ncv-view-item {

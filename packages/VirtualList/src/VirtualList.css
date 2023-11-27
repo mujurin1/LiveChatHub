@@ -1,5 +1,6 @@
 .virtual-list {
   position: relative;
+  flex: 1;
   overflow-x: auto;
   overflow-y: scroll;
   box-sizing: border-box;

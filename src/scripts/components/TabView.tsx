@@ -26,9 +26,6 @@ export function TabView({ liveManager }: TabViewProps) {
 
 
   return (
-    <div>
-
-      <NCV_View state={ncvViewState} />
-    </div>
+    <NCV_View state={ncvViewState} />
   );
 }

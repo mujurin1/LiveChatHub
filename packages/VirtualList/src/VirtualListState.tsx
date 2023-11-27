@@ -248,7 +248,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     viewportHeightRef.current = propHeight;
 
     if (propHeight > sumContentHeight) {
-      viewport.style.height = `${propHeight}px`;
+      // viewport.style.height = `${propHeight}px`;
     } else {
       /** 「拡大率 百分率で小数点がある場合にズレる」のは
        * スクロール位置が画面上のピクセル位置に依存しているせいで、
