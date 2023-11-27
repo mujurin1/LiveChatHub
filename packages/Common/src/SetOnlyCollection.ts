@@ -6,9 +6,9 @@ import { ReadonlyCollection } from "./ReadonlyCollection";
  * キーの配列, 値の配列, キーから値の取得が可能
  */
 export class SetonlyCollection<
+  K extends number | string,
   V,
-  K extends number | string
-> implements ReadonlyCollection<V, K> {
+> implements ReadonlyCollection<K, V> {
   readonly keyIndexes: Record<K, number> = {} as Record<K, number>;
   readonly keys: K[] = [];
   readonly values: V[] = [];
@@ -57,6 +57,10 @@ export class SetonlyCollection<
     } else {
       this.values[index] = value;
     }
+  }
+
+  asReadonly(): ReadonlyCollection<K, V> {
+    return this;
   }
 
   // filter(fn: Fn<[V], boolean>): SetonlyCollection<V> {

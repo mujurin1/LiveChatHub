@@ -5,8 +5,8 @@ import { Fn } from "./util";
  * キーの配列, 値の配列, キーから値の取得が可能
  */
 export interface ReadonlyCollection<
+  K extends number | string,
   V,
-  K extends number | string
 > {
   /**
    * { Key: Index } のレコード

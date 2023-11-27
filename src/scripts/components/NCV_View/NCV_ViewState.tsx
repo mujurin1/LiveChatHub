@@ -1,13 +1,13 @@
 import { RowRender, useVirtualListState } from "@lch/virtual-list";
 import { useState, useMemo } from "react";
-import { ColumnState, NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
-import { SampleSiteComment } from "../../connectors/SampleSiteConnector";
-import { FeedData } from "../../connectors/FeedData";
+import { NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
+import { LiveManager } from "../../Lives/LiveManager";
+import { LiveItem } from "../../Lives/LiveItem";
 
 
 export type NCV_ViewState = ReturnType<typeof useNCV_ViewState>;
 
-export function useNCV_ViewState(height: number, width: number, feedDatas: FeedData[]) {
+export function useNCV_ViewState(height: number, width: number, liveManager: LiveManager) {
   // 後で無くすコメント欄下のエリア分引いておく
   height -= 70;
 
@@ -16,10 +16,10 @@ export function useNCV_ViewState(height: number, width: number, feedDatas: FeedD
   const headerState = useHeaderState(width, 50);
   const virtualListState = useVirtualListState(height - 50, autoScroll);
 
-  const rowRender = useMemo(() => createCommentViewRow(feedDatas, headerState), [feedDatas, headerState]);
+  const rowRender = useMemo(() => createCommentViewRow(liveManager, headerState), [liveManager, headerState]);
 
-  const addComments = (ids: number[]) => {
-    virtualListState.addContents(ids);
+  const addLiveItems = (liveItems: LiveItem[]) => {
+    virtualListState.addContents(liveItems.map(item => item.id));
   };
 
   return {
@@ -30,16 +30,16 @@ export function useNCV_ViewState(height: number, width: number, feedDatas: FeedD
     setAutoScroll,
     rowRender,
 
-    addComments,
+    addLiveItems,
   };
 }
 
-function createCommentViewRow(feedDatas: FeedData[], headerState: NCV_HeaderState) {
+function createCommentViewRow(liveManager: LiveManager, headerState: NCV_HeaderState) {
   const steColumns = headerState.headerColumnsTemp ?? headerState.headerColumns;
 
   return function RowRender({ contentId }: Parameters<RowRender>[0]) {
-    const feedData = feedDatas[contentId];
-    const comment = feedData.content;
+    const item = liveManager.getLiveItem(contentId);
+    const comment = item.content;
 
     return (
       <div className="ncv-view-item" style={{ minHeight: 40 }}>
@@ -49,29 +49,17 @@ function createCommentViewRow(feedDatas: FeedData[], headerState: NCV_HeaderStat
             key={state.type}
             style={{ width: state.width }}
           >
-            {
+            {(
               comment == null ? "NULL" :
-                state.type === "global-id" ? contentId :
+                state.type === "item-id" ? contentId :
                   state.type === "name" ? comment.userName :
                     state.type === "time" ? comment.time.toLocaleTimeString() :
-                      state.type === "content" ? comment.message :
-                        ""
-            }
+                      state.type === "content" ?
+                        `mgdId:${item.id & 0xFF}  index:${item.id >> 0x8}` : ""
+            )}
           </div>
         ))}
       </div>
     );
   };
 }
-
-// function NCV_Comment({ columnState, comment }: {columnState: ColumnState, comment: SampleSiteComment}) {
-//   const [x, setX] = useState("");
-
-//   return (
-//     <>
-//       {comment}
-//       {/* {`${columnState.type}${contentId} `} */}
-//       {/* <input type="text" style={{ width: 80 }} value={x} onChange={e => setX(e.target.value)} /> */}
-//     </>
-//   );
-// }

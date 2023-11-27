@@ -1,6 +1,6 @@
 import { VirtualList } from "@lch/virtual-list";
 import { NCV_ViewState } from "./NCV_ViewState";
-import { ColumnState, NCV_Header } from "./NCV_Header";
+import { NCV_Header } from "./NCV_Header";
 
 import "./NCV_View.css";
 
