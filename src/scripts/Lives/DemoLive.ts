@@ -146,7 +146,9 @@ class DemoConnection {
 
       this.contentInterval = setInterval(() => {
         this.createContent(1);
-      }, 1000);
+      }, 300);
+
+      this.createContent(1);
     }, 0);
   }
 

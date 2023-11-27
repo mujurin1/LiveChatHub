@@ -1,18 +1,25 @@
 import { RowRender, useVirtualListState } from "@lch/virtual-list";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
 import { LiveManager } from "../../Lives/LiveManager";
 import { LiveItem } from "../../Lives/LiveItem";
+import { useResizeObserve } from "../../hooks/useElementSize";
 
 
 export type NCV_ViewState = ReturnType<typeof useNCV_ViewState>;
 
-export function useNCV_ViewState(height: number, width: number, liveManager: LiveManager) {
+export function useNCV_ViewState(liveManager: LiveManager) {
+
+  const {
+    ref: ncv_view_ref,
+    width,
+    height
+  } = useResizeObserve<HTMLDivElement>();
+
   // 後で無くすコメント欄下のエリア分引いておく
-  height -= 70;
+  // height -= 70;
 
   const [autoScroll, setAutoScroll] = useState(true);
-
   const headerState = useHeaderState(width, 50);
   const virtualListState = useVirtualListState(height - 50, autoScroll);
 
@@ -23,6 +30,8 @@ export function useNCV_ViewState(height: number, width: number, liveManager: Liv
   };
 
   return {
+    ncv_view_ref,
+
     virtualListState,
     headerState,
     autoScroll,

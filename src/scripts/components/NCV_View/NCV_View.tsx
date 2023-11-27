@@ -9,6 +9,8 @@ export * from "./NCV_ViewState";
 
 export function NCV_View({ state }: { state: NCV_ViewState; }) {
   const {
+    ncv_view_ref,
+
     virtualListState,
     headerState,
     autoScroll,
@@ -22,7 +24,7 @@ export function NCV_View({ state }: { state: NCV_ViewState; }) {
 
   return (
     <>
-      <div className="ncv-view-body">
+      <div className="ncv-view-body" ref={ncv_view_ref}>
         <NCV_Header
           state={headerState}
         />
@@ -32,7 +34,7 @@ export function NCV_View({ state }: { state: NCV_ViewState; }) {
         />
       </div>
 
-      <div style={{ backgroundColor: "#64ffb9", height: 70 }}>
+      <div style={{ backgroundColor: "#64ffb9", flex: "0 0 70px" }}>
         <label htmlFor="autoScroll">自動スクロール</label>
         <input
           id="autoScroll"

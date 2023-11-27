@@ -6,11 +6,12 @@ import { css } from "@emotion/react";
 export const HEAD_AREA_HEIGHT = 100;
 
 export function LiveChatHub() {
-
   const liveManager = useLiveManager();
+
   return (
     <div css={css`
-    height: 100vh;
+    position: fixed;
+    inset: 0;
     display: flex;
     flex-direction: column;
     `}>
@@ -28,7 +29,7 @@ function ConnectorView({ liveManager }: ConnectorViewState) {
   const [liveIds, setLiveIds] = useState(["aa?x", "bb?x"]);
 
   return (
-    <div style={{ height: HEAD_AREA_HEIGHT }}>
+    <div style={{ flex: `0 0 ${HEAD_AREA_HEIGHT}px` }}>
       <table>
         <thead>
           <tr>

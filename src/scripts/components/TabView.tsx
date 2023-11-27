@@ -9,9 +9,7 @@ export interface TabViewProps {
 }
 
 export function TabView({ liveManager }: TabViewProps) {
-  const { windowWidth, windowHeight } = useWidnowSize();
-
-  const ncvViewState = useNCV_ViewState(windowHeight - HEAD_AREA_HEIGHT, windowWidth, liveManager);
+  const ncvViewState = useNCV_ViewState(liveManager);
 
   useEffect(() => {
     const func: Parameters<typeof liveManager.onReceiveLiveDatas.add>[0] = (managedIndex, liveItems) => {
