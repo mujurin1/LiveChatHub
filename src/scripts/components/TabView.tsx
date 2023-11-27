@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useWidnowSize } from "../hooks/useWidnowSize";
-import { NCV_View, NCV_ViewState, useNCV_ViewState } from "./NCV_View/NCV_View";
+import { NCV_View, useNCV_ViewState } from "./NCV_View/NCV_View";
 import { LiveManager } from "../Lives/LiveManager";
 import { HEAD_AREA_HEIGHT } from "./LiveChatHub";
 

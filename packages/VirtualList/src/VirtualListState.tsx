@@ -28,7 +28,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     // いずれかの状態が変化したことを通知するオブジェクト
     updatedAnyVersion, updatedAny,
     // rowLayouts が変化したことを通知するオブジェクト
-    updatedRowLayoutVersion, updatedRowLayout,
+    updatedRowLayoutVersion,
   ] = useCustomHook();
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -50,7 +50,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   /**
    * @param source 再計算をする原因
    */
-  const refreshRowLayout = useCallback((source: "any" | "scroll") => {
+  const refreshRowLayout = useCallback((_source: "any" | "scroll") => {
     // 以下の TODO: 最適化の部分 関連
     // const rowLayoutNode = rowLayoutNodeRef.current;
     const rowCount = rowCountRef.current;
@@ -359,7 +359,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
  */
 function useCustomHook() {
   const [updatedAnyVersion, setAny] = useState(0);
-  const [updatedRowLayoutVersion, setRowLayout] = useState(0);
+  const [updatedRowLayoutVersion] = useState(0);
 
   const updatedAny = useCallback(() => {
     setAny(x => x + 1);

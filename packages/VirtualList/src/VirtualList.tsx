@@ -19,8 +19,6 @@ export function VirtualList(props: VirtualListProps) {
     rowLayoutNode,
     renderRowTop,
 
-    updatedRowLayoutVersion,
-
     updateRowHeight,
   } = props.state;
   const RowRender = props.rowRender;
