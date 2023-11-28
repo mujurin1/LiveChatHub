@@ -68,7 +68,7 @@ function ConnectorView(_props: ConnectorViewState) {
             <td>
               <button onClick={(() => {
                 if (liveManager.connect(connectId)) {
-                  setConnectId("");
+                  setConnectId("bb");
                 }
               })}>{"接続"}</button>
             </td>

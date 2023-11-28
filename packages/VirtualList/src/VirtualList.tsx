@@ -52,11 +52,11 @@ export function VirtualList(props: VirtualListProps) {
   return (
     <div
       className="virtual-list"
-      ref={props.state.viewportRef}
+      ref={props.state.setViewportRef}
     >
       <div
         className="virtual-list-scroll"
-        ref={props.state.scrollRef}
+        ref={props.state.setScrollRef}
       />
       <div
         className="virtual-list-lineup"

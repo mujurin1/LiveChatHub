@@ -1,5 +1,5 @@
 import { VirtualList } from "@lch/virtual-list";
-import { useNCV_ViewState } from "./NCV_ViewState";
+import { NCV_ViewState, useNCV_ViewState } from "./NCV_ViewState";
 import { NCV_Header } from "./NCV_Header";
 import { useReceiveLiveItems } from "../../services/LiveManager";
 
@@ -8,17 +8,21 @@ import "./NCV_View.css";
 export * from "./NCV_Header";
 export * from "./NCV_ViewState";
 
-export function NCV_View() {
-  const state = useNCV_ViewState();
+export interface NCV_ViewProps {
+  state: NCV_ViewState;
+}
+
+export function NCV_View({ state }: NCV_ViewProps) {
+
+  // const state2 = useNCV_ViewState();
   useReceiveLiveItems((_, liveItems) => state.addLiveItems(liveItems));
 
   const {
-    ncv_view_ref,
-
     virtualListState,
     headerState,
     autoScroll,
 
+    setRef,
     setAutoScroll,
     rowRender,
   } = state;
@@ -28,7 +32,7 @@ export function NCV_View() {
 
   return (
     <>
-      <div className="ncv-view-body" ref={ncv_view_ref}>
+      <div className="ncv-view-body" ref={setRef}>
         <NCV_Header
           state={headerState}
         />

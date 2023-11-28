@@ -31,11 +31,122 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     updatedRowLayoutVersion,
   ] = useCustomHook();
 
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const autoScrollRef = useRef(propAutoScroll);
+  //#region プロパティ/HTMLElement が変更されたら呼ぶ関数定義
+  const setScrollEvent = useCallback((oldViewportRef: typeof viewportRef) => {
+    if (oldViewportRef.element != null) {
+      oldViewportRef.element.removeEventListener("scroll", oldViewportRef.scrollEvent!);
+    }
+
+    if (viewportRef.element == null) return;
+
+    viewportRef.scrollEvent = (_e: Event) => {
+      if (!__dbg_user_scroll_ref.current) return;
+      if (viewportRef.element == null) return;
+
+      // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
+      // プログラムなら何もしない
+      scrollTo(viewportRef.element.scrollTop);
+      updatedAny();
+    };
+
+    viewportRef.element.addEventListener("scroll", viewportRef.scrollEvent, { passive: true });
+  }, []);
+
+  const setViewportHeight = useCallback((heightDiff: number) => {
+    if (viewportRef.element == null) return;
+
+    if (viewportScrollTopRef.current - heightDiff < 0)
+      heightDiff = viewportScrollTopRef.current;
+
+    if (viewportHeightRef.current > sumContentHeightRef.current) {
+      // viewport.style.maxHeight = `${viewportHeightRef.current}px`;
+    } else {
+      //#region コメント
+      /** 「拡大率 百分率で小数点がある場合にズレる」のは
+       * スクロール位置が画面上のピクセル位置に依存しているせいで、
+       * 指定した scrollTop がピクセル上でない場合に、近くのピクセルに近似される？ため？
+       * 
+       * なので scrollTop は参照せずに指定するだけに留めれば良いのだが、
+       * スクロールイベント発生時にそれが ユーザー or プログラム をイベントから判断することが不可能なので、
+       * 実スクロール位置から、新しいスクロール位置を判定する関数 {@link scrollTo} 内部で
+       * scrollTop を新しいスクロール位置に指定する必要がある
+       * 
+       * そのため コメント追加/ウィンドウ縦幅変更 時に
+       *   → プログラムから scrollTop を設定
+       *   → スクロールイベントが発生
+       *   → 現在の scrollTop を元に新しいスクロール位置を設定
+       *   → その値は現在の描画位置と違うため少しズレる
+       * 
+       * また、コメント追加時の自動スクロールでは
+       * スクロール位置の計算に誤差が生まれるため、自動スクロールが反応しない場合がある
+       * 
+       * スクロールイベントの原因が ユーザー or プログラム か判断できれば問題は全て解決する
+       */
+
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // const oldViewEleHeight = viewport.style.height;
+
+      // viewport.style.maxHeight = `${viewportHeightRef.current}px`;
+      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
+      // const oldScrollTop = viewport.scrollTop;
+      //#endregion コメント
+      viewportScrollTopRef.current -= heightDiff;
+      viewportRef.element.scrollTop = viewportScrollTopRef.current;
+    }
+
+    rowCountRef.current = Math.floor((viewportHeightRef.current) / MIN_ROW_HEIGHT) + 2;
+
+    if (contentHeights.length !== 0)
+      refreshRowLayout("any");
+
+    // updatedAny();
+  }, []);
+  //#endregion プロパティ/HTMLElement が変更されたら呼ぶ関数定義
+
+
+  //#region プロパティ/HTMLElement を保持/変更する定義
+  /** ビューポートHTML要素 */
+  // const viewportRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useMemo<{ element: HTMLDivElement | null; scrollEvent?: (_: Event) => void; }>(() => ({ element: null }), []);
+  const setViewportRef = useCallback((element: HTMLDivElement | null) => {
+    const oldValue = { ...viewportRef };
+    viewportRef.element = element;
+
+    setViewportHeight(0);
+    setScrollEvent(oldValue);
+  }, []);
+
+  /** スクロールHTML要素 */
+  // const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useMemo<{ element: HTMLDivElement | null; }>(() => ({ element: null }), []);
+  const setScrollRef = useCallback((element: HTMLDivElement | null) => {
+    scrollRef.element = element;
+
+    if (scrollRef.element != null) {
+      scrollRef.element.style.height = `${sumContentHeightRef.current}px`;
+    }
+  }, []);
+
   const viewportHeightRef = useRef(propHeight);
+  // リストビューの高さの再設定
+  useEffect(() => {
+    const oldHeight = viewportHeightRef.current;
+    viewportHeightRef.current = propHeight;
+
+    setViewportHeight(viewportHeightRef.current - oldHeight);
+  }, [propHeight] /* 引数で受け取った高さを元に再計算するため propHeight を指定する */);
+
+
+  /** 自動スクロール */
+  const autoScrollRef = useRef(propAutoScroll);
+  useEffect(() => {
+    autoScrollRef.current = propAutoScroll;
+  }, [propAutoScroll] /* 引数で受け取った自動スクロールを元に再計算するため propAutoScroll を指定する */);
+  //#endregion プロパティ/HTMLElement を保持/変更する定義
+
+
+
   const viewportScrollTopRef = useRef(0);
   const sumContentHeightRef = useRef(0);
   const rowCountRef = useRef(10);
@@ -109,7 +220,9 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   }, []);
 
   const scrollTo = useCallback((toY: number | "bottom") => {
-    const viewport = viewportRef.current!;
+    const viewport = viewportRef.element;
+    if (viewport == null) return;
+
     const sumContentHeight = sumContentHeightRef.current;
     const viewportHeight = viewportHeightRef.current;
 
@@ -130,7 +243,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   }, []);
 
   const addContent = useCallback((contentId: number, initialHeight: number | undefined = undefined) => {
-    const scroll = scrollRef.current!;
+    const scroll = scrollRef.element!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
 
@@ -160,7 +273,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     // initialHeight: 多量のコメントが追加された場合スクロール更新に時間がかかるので大きめに取る
     //                ただし大きすぎると途中の行が表示されない場合がある
     //                (1度も描画されずに高さが合わない)
-    const scroll = scrollRef.current!;
+    const scroll = scrollRef.element!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
 
@@ -198,15 +311,17 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     if (diff === 0) return;
 
     const autoScroll = autoScrollRef.current;
-    const scroll = scrollRef.current!;
-    const viewport = viewportRef.current!;
+    const scroll = scrollRef.element;
+    const viewport = viewportRef.element;
+
     const sumContentHeight = sumContentHeightRef.current;
     const viewportHeight = viewportHeightRef.current;
 
     contentHeights.set(contentId, height);
     sumContentHeightRef.current += diff;
 
-    scroll.style.height = `${sumContentHeightRef.current}px`;
+    if (scroll != null)
+      scroll.style.height = `${sumContentHeightRef.current}px`;
 
     //#region 変更された行が表示範囲 (を含む) より上の場合はスクロール位置を調整する
     const contentIndex = contentHeights.keyIndexes[contentId];
@@ -217,7 +332,9 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     if (contentIndex < renderBottomContentIndex) {
       viewportScrollTopRef.current += diff;
       if (viewportScrollTopRef.current < 0) viewportScrollTopRef.current = 0;
-      viewport.scrollTop = viewportScrollTopRef.current;
+
+      if (viewport != null)
+        viewport.scrollTop = viewportScrollTopRef.current;
     }
     //#endregion 変更された行が表示範囲 (を含む) より上の場合はスクロール位置を調整する
 
@@ -228,113 +345,11 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     const isAutoScroll = bottom <= viewportScrollTopRef.current + 3;
     if (isAutoScroll && autoScroll) scrollTo("bottom");
     else refreshRowLayout("any");
-
-    console.log(contentHeights.values.at(-1));
-
-  }, []);
-
-
-  // リストビューの高さの再設定
-  useEffect(() => {
-    const viewport = viewportRef.current!;
-    const sumContentHeight = sumContentHeightRef.current;
-
-    let heightDiff = propHeight - viewportHeightRef.current;
-
-    if (viewportScrollTopRef.current - heightDiff < 0)
-      heightDiff = viewportScrollTopRef.current;
-
-
-    viewportHeightRef.current = propHeight;
-
-    if (propHeight > sumContentHeight) {
-      // viewport.style.maxHeight = `${propHeight}px`;
-    } else {
-      /** 「拡大率 百分率で小数点がある場合にズレる」のは
-       * スクロール位置が画面上のピクセル位置に依存しているせいで、
-       * 指定した scrollTop がピクセル上でない場合に、近くのピクセルに近似される？ため？
-       * 
-       * なので scrollTop は参照せずに指定するだけに留めれば良いのだが、
-       * スクロールイベント発生時にそれが ユーザー or プログラム をイベントから判断することが不可能なので、
-       * 実スクロール位置から、新しいスクロール位置を判定する関数 {@link scrollTo} 内部で
-       * scrollTop を新しいスクロール位置に指定する必要がある
-       * 
-       * そのため コメント追加/ウィンドウ縦幅変更 時に
-       *   → プログラムから scrollTop を設定
-       *   → スクロールイベントが発生
-       *   → 現在の scrollTop を元に新しいスクロール位置を設定
-       *   → その値は現在の描画位置と違うため少しズレる
-       * 
-       * また、コメント追加時の自動スクロールでは
-       * スクロール位置の計算に誤差が生まれるため、自動スクロールが反応しない場合がある
-       * 
-       * スクロールイベントの原因が ユーザー or プログラム か判断できれば問題は全て解決する
-       */
-
-      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
-      // const oldViewEleHeight = viewport.style.height;
-
-      // viewport.style.maxHeight = `${propHeight}px`;
-      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
-      // const oldScrollTop = viewport.scrollTop;
-      viewportScrollTopRef.current -= heightDiff;
-      viewport.scrollTop = viewportScrollTopRef.current;
-
-      // 拡大率 百分率で小数点がある場合にズレる時の検証用コード
-      // console.log("rowTopRef.current", renderRowTopRef.current, "   viewport.scrollTop", viewport.scrollTop);
-      // console.log(heightDiff - (oldScrollTop - viewport.scrollTop));
-      //
-      // console.log(`${oldScrollTop} - ${viewport.scrollTop} = `, oldScrollTop - viewport.scrollTop);
-      // console.log(`viewport height   :   old: ${oldViewEleHeight}   ${viewport.style.height}   dif: ${heightDiff}`);
-      // console.log(`viewport scrollTop:   old: ${oldScrollTop}   ${viewport.scrollTop}`);
-    }
-
-    // TODO: コンテンツIDと行キーが余りずれないように
-    //       行の最大行数より少なくても表示行数は固定していたけど要らない‥?
-    // rowCountRef.current = Math.max(
-    //   Math.min(rowCountRef.current, 30),
-    //   Math.min(
-    //     Math.floor((propHeight) / MIN_ROW_HEIGHT) + 2
-    //   )
-    // );
-    rowCountRef.current = Math.floor((propHeight) / MIN_ROW_HEIGHT) + 2;
-
-    if (contentHeights.length !== 0)
-      refreshRowLayout("any");
-
-    // updatedAny();
-    // 引数で受け取ったビューポートの高さを元に再計算するため propsHeight を指定する
-  }, [propHeight]);
-
-  // 自動スクロールの再設定
-  useEffect(() => {
-    autoScrollRef.current = propAutoScroll;
-    // 引数で受け取った自動スクロールを元に再計算するため propAutoScroll を指定する
-  }, [propAutoScroll]);
-
-
-  // スクロールイベントによる rowLayouts の更新
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    const scroll = scrollRef.current;
-    if (viewport == null || scroll == null) return;
-
-    const scrollEvent = (_e: Event) => {
-      if (!__dbg_user_scroll_ref.current) return;
-
-      // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
-      // プログラムなら何もしない
-      scrollTo(viewport.scrollTop);
-      updatedAny();
-    };
-
-    viewport.addEventListener("scroll", scrollEvent, { passive: true });
-    return () => viewport.removeEventListener("scroll", scrollEvent);
   }, []);
 
   return {
-    viewportRef,
-    scrollRef,
+    setViewportRef,
+    setScrollRef,
 
     /** いずれかの状態が変化したことを伝えるオブジェクト */
     updatedAnyVersion,

@@ -1,5 +1,5 @@
 import { RowRender, useVirtualListState } from "@lch/virtual-list";
-import { useState, useMemo, } from "react";
+import { useState, useMemo, useRef, } from "react";
 import { NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
 import { LiveManager, liveManager } from "../../services/LiveManager";
 import { LiveItem } from "../../Lives/LiveItem";
@@ -9,12 +9,11 @@ import { useResizeObserve } from "../../hooks/useElementSize";
 export type NCV_ViewState = ReturnType<typeof useNCV_ViewState>;
 
 export function useNCV_ViewState() {
-
   const {
-    ref: ncv_view_ref,
     width,
-    height
-  } = useResizeObserve<HTMLDivElement>();
+    height,
+    setRef,
+  } = useResizeObserve();
 
   // 後で無くすコメント欄下のエリア分引いておく
   // height -= 70;
@@ -30,7 +29,7 @@ export function useNCV_ViewState() {
   };
 
   return {
-    ncv_view_ref,
+    setRef,
 
     virtualListState,
     headerState,

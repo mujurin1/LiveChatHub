@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export function useResizeObserve<T extends Element>() {
-  const ref = useRef<T>(null);
+  const [element, setElement] = useState<T | null>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const setRef = useCallback(setElement, []);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
 
@@ -15,18 +17,18 @@ export function useResizeObserve<T extends Element>() {
   }), []);
 
   useEffect(() => {
-    const element = ref.current;
     if (element == null) return;
     const observedElement = element;
 
     resizeObserver.observe(observedElement);
 
     return () => resizeObserver.unobserve(observedElement);
-  }, [resizeObserver]);
+  }, [resizeObserver, element]);
 
   return {
-    ref,
     width,
     height,
+
+    setRef,
   };
 }
