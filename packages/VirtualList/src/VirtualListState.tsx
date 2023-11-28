@@ -31,8 +31,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
     updatedRowLayoutVersion,
   ] = useCustomHook();
 
-
-
   // スクロールイベントによる rowLayouts の更新
   const setScrollEvent = useCallback((oldViewportRef: typeof viewportRef) => {
     if (oldViewportRef.current != null) {
@@ -53,26 +51,7 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
 
     viewportRef.current.addEventListener("scroll", viewportRef.scrollEvent, { passive: true });
   }, []);
-  // useEffect(() => {
-  //   const viewport = viewportRef.current;
-  //   const scroll = scrollRef.current;
-  //   if (viewport == null || scroll == null) return;
 
-  //   const scrollEvent = (_e: Event) => {
-  //     if (!__dbg_user_scroll_ref.current) return;
-
-  //     // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
-  //     // プログラムなら何もしない
-  //     scrollTo(viewport.scrollTop);
-  //     updatedAny();
-  //   };
-
-  //   viewport.addEventListener("scroll", scrollEvent, { passive: true });
-  //   return () => viewport.removeEventListener("scroll", scrollEvent);
-  // }, []);
-
-  // const viewportRef = useRef<HTMLDivElement>(null);
-  // const scrollRef = useRef<HTMLDivElement>(null);
   const viewportRef = useMemo<{ current: HTMLDivElement | null; scrollEvent?: (e: Event) => void; }>(() => ({ current: null }), []);
   const scrollRef = useMemo<{ current: HTMLDivElement | null; }>(() => ({ current: null }), []);
   const setViewportRef = useCallback((element: HTMLDivElement | null) => {
@@ -90,8 +69,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   }, []);
 
 
-
-
   const autoScrollRef = useRef(propAutoScroll);
   const viewportHeightRef = useRef(propHeight);
   const viewportScrollTopRef = useRef(0);
@@ -101,7 +78,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   const __dbg_user_scroll_ref = useRef(true);
 
   const rowLayoutNodeRef = useRef<RowLayoutNode | null>(null);
-  // const rowLayoutNode = useMemo<RowLayoutNode | null>(() => null, []);
   /** { contentId: `contentId` の行の描画後の高さ }[] */
   const contentHeights = useMemo(() => new SetonlyCollection<number, number>(), []);
 
@@ -190,7 +166,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
   }, []);
 
   const addContent = useCallback((contentId: number, initialHeight: number | undefined = undefined) => {
-    const scroll = scrollRef.current!;
     const viewportHeight = viewportHeightRef.current;
     const autoScroll = autoScrollRef.current;
 
@@ -211,7 +186,6 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
 
     if (scrollRef.current != null)
       scrollRef.current.style.height = `${sumContentHeightRef.current}px`;
-
 
     if (isAutoScroll && autoScroll) scrollTo("bottom");
     else updatedAny();
@@ -401,14 +375,14 @@ export function useVirtualListState(propHeight: number, propAutoScroll: boolean)
  */
 function useCustomHook() {
   const [updatedAnyVersion, setAny] = useState(0);
-  const [updatedRowLayoutVersion] = useState(0);
+  const [updatedRowLayoutVersion, setRowLayout] = useState(0);
 
   const updatedAny = useCallback(() => {
+    setRowLayout(x => x + 1);
     setAny(x => x + 1);
   }, []);
   const updatedRowLayout = useCallback(() => {
-    // setRowLayout(x => x + 1);
-    setAny(x => x + 1);
+    setRowLayout(x => x + 1);
   }, []);
 
   return [

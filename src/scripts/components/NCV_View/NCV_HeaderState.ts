@@ -12,7 +12,10 @@ export interface NCV_HeaderColumnState {
 export const HEADER_COL_MIN_WIDTH = 20;
 export const SCROLL_BAR_WIDTH = 10;
 
-const initialHeaderColumnState: NCV_HeaderColumnState = {
+// columns: ColumnState[];
+// columnsTemp: ColumnState[] | null;
+// flexIndex: number;
+const getInitialHeaderColumnState = () => ({
   columns: [
     { type: "item-id", width: 180 },
     { type: "name", width: 180 },
@@ -21,7 +24,7 @@ const initialHeaderColumnState: NCV_HeaderColumnState = {
   ],
   columnsTemp: null,
   flexIndex: 3,
-};
+} as NCV_HeaderColumnState);
 
 export type NCV_HeaderState = ReturnType<typeof useHeaderState>;
 
@@ -40,9 +43,9 @@ export function useHeaderState(headerWidth: number, headerHeight: number) {
   const columnWidth = headerWidth - SCROLL_BAR_WIDTH;
 
   //#region HeaderColumnState の設定
-  const [headerColumns, setHeaderColumns] = useState(initialHeaderColumnState.columns);
-  const [headerColumnsTemp, setHeaderColumnsTemp] = useState(initialHeaderColumnState.columnsTemp);
-  const [flexIndex] = useState(initialHeaderColumnState.flexIndex);
+  const [headerColumns, setHeaderColumns] = useState(getInitialHeaderColumnState().columns);
+  const [headerColumnsTemp, setHeaderColumnsTemp] = useState(getInitialHeaderColumnState().columnsTemp);
+  const [flexIndex] = useState(getInitialHeaderColumnState().flexIndex);
 
   const setWidth = useCallback((index: number, width: number) => {
     setHeaderColumns(oldState => {
@@ -166,7 +169,6 @@ export function useHeaderState(headerWidth: number, headerHeight: number) {
   );
 
   const returnValue = useMemo(() => ({
-    // width: headerWidth,
     height: headerHeight,
 
     headerColumns,

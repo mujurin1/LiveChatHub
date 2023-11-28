@@ -1,5 +1,5 @@
 import { RowRender, useVirtualListState } from "@lch/virtual-list";
-import { useState, useMemo, useRef, } from "react";
+import { useState, useMemo, } from "react";
 import { NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
 import { LiveManager, liveManager } from "../../services/LiveManager";
 import { LiveItem } from "../../Lives/LiveItem";

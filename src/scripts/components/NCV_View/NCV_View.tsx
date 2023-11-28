@@ -1,5 +1,5 @@
 import { VirtualList } from "@lch/virtual-list";
-import { NCV_ViewState, useNCV_ViewState } from "./NCV_ViewState";
+import { NCV_ViewState } from "./NCV_ViewState";
 import { NCV_Header } from "./NCV_Header";
 import { useReceiveLiveItems } from "../../services/LiveManager";
 
@@ -13,7 +13,6 @@ export interface NCV_ViewProps {
 }
 
 export function NCV_View({ state }: NCV_ViewProps) {
-
   // const state2 = useNCV_ViewState();
   useReceiveLiveItems((_, liveItems) => state.addLiveItems(liveItems));
 
