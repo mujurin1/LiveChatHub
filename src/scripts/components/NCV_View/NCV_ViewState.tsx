@@ -15,9 +15,6 @@ export function useNCV_ViewState() {
     setRef,
   } = useResizeObserve();
 
-  // 後で無くすコメント欄下のエリア分引いておく
-  // height -= 70;
-
   const [autoScroll, setAutoScroll] = useState(true);
   const headerState = useHeaderState(width, 50);
   const virtualListState = useVirtualListState(height - 50, autoScroll);
