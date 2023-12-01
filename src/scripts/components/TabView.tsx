@@ -9,20 +9,20 @@ export interface TabViewProps {
 
 export function TabView(_props: TabViewProps) {
   const state1 = useNCV_ViewState();
-  const state2 = useNCV_ViewState();
+  // const state2 = useNCV_ViewState();
 
   return (
     <Tabs className="tab-view">
       <TabList>
-        <Tab>Title 1</Tab>
-        <Tab>Title 2</Tab>
+        <Tab>全コメント</Tab>
+        <Tab>Live X コメント</Tab>
       </TabList>
 
       <TabPanel selectedClassName="tab-view-panel">
         <NCV_View state={state1} />
       </TabPanel>
       <TabPanel selectedClassName="tab-view-panel">
-        <NCV_View state={state2} />
+        {/* <NCV_View state={state2} /> */}
       </TabPanel>
     </Tabs>
   );

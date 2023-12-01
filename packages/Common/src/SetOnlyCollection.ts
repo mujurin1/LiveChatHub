@@ -24,10 +24,10 @@ export class SetonlyCollection<
   /**
    * コンストラクタ
    */
-  constructor(initials?: { key: K, value: V; }[]) {
-    if (initials != null) {
-      for (const data of initials) {
-        this.set(data.key, data.value);
+  constructor(keys?: K[], values?: V[]) {
+    if (keys != null && values != null) {
+      for (let i = 0; i < keys.length; i++) {
+        this.set(keys[i], values[i]);
       }
     }
   }
@@ -62,6 +62,11 @@ export class SetonlyCollection<
   asReadonly(): ReadonlyCollection<K, V> {
     return this;
   }
+
+  clone(): SetonlyCollection<K, V> {
+    return new SetonlyCollection(this.keys, this.values);
+  }
+
 
   // filter(fn: Fn<[V], boolean>): SetonlyCollection<V> {
   //   const collection = new SetonlyCollection<V>(this.#getKey);

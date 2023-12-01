@@ -1,5 +1,5 @@
-import { useLayoutEffect, useMemo, useRef } from "react";
-import { VirtualListState } from "./VirtualListState";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { VirtualListState, _VirtualListState } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
 import { LinkedList } from "./LinkedList";
 
@@ -15,24 +15,38 @@ export interface VirtualListProps {
 }
 
 export function VirtualList(props: VirtualListProps) {
-  const {
-    rowLayoutNode,
-    renderRowTop,
+  // const {
+  //   rowLayoutNode,
+  //   scrollTop, // renderRowTop,
 
-    updateRowHeight,
-  } = props.state;
+  //   updateRowHeight,    // updateRowHeight,
+  // } = props.state;
+  const state = props.state;
   const RowRender = props.rowRender;
 
   const resizeObserver = useMemo(() => new ResizeObserver(elements => {
+    if (elements.length === 0) return;
+
+    let newState = state.value;
+
     for (const element of elements) {
       const target = element.target as HTMLElement;
       const contentId = parseInt(target.dataset.contentId!);
 
-      if (isNaN(contentId)) return;
+      if (isNaN(contentId)) continue;
 
-      updateRowHeight(contentId, target.clientHeight);
+      // state.dispatch(old => old.updateRowHeight(contentId, target.clientHeight));
+      newState = newState.updateRowHeight(contentId, target.clientHeight);
     }
-  }), [updateRowHeight]);
+
+    state.dispatch(newState);
+  }), [state]);
+
+  // console.log();
+  // for (const x of LinkedList.getIterator(state.value.rowLayoutNode)) {
+  //   console.log(x.value.contentId);
+  // }
+
 
   // const rows = useMemo(
   //   () => LinkedList.map(rowLayoutNode, node => (
@@ -49,22 +63,59 @@ export function VirtualList(props: VirtualListProps) {
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   //   [RowRender, updatedRowLayoutVersion]);
 
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const __height = state.value.getSumContentHeight();
+  const __s = scrollRef.current;
+  useEffect(() => {
+    if (__s == null) return;
+
+    __s.style.height = `${__height}px`;
+  }, [__height, __s]);
+
+  const __v = viewportRef.current;
+  useEffect(() => {
+    if (__v == null) return;
+
+    __v.scrollTop = state.value.scrollTop;
+  }, [state.value.scrollTop, __v]);
+
+  useEffect(() => {
+    if (__v == null) return;
+
+    const fn = (_e: Event) => {
+      if (__v == null) return;
+      if (!_VirtualListState.__dbg_user_scroll_ref.current) return;
+
+      // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
+      // プログラムなら何もしない
+      // state.dispatch(state.value.scrollTo(__v.scrollTop));
+      state.dispatch(state.value.scrollTo(__v.scrollTop));
+    };
+
+    __v.addEventListener("scroll", fn, { passive: true });
+
+    return () => __v.removeEventListener("scroll", fn);
+  }, [state.value, __v, state]);
+
   return (
     <div
       className="virtual-list"
-      ref={props.state.setViewportRef}
+      ref={viewportRef}
     >
       <div
         className="virtual-list-scroll"
-        ref={props.state.setScrollRef}
+        ref={scrollRef}
       />
       <div
         className="virtual-list-lineup"
-        style={{ top: renderRowTop }}
+        style={{ top: state.value.rowShift }}
+      // style={{ top: renderRowTop }}
       >
         {/* {rows} */}
         {
-          LinkedList.map(rowLayoutNode, node => (
+          LinkedList.map(state.value.rowLayoutNode, node => (
             <VirtualListRow
               key={node.value.rowKey}
               rowLayout={node.value}

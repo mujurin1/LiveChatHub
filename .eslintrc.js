@@ -51,6 +51,7 @@ module.exports = {
         ],
         "@typescript-eslint/no-base-to-string": "off",
         "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/no-this-alias": "off",
         "no-constant-condition": ["error", { "checkLoops": false }],
         "no-empty": "off",
         "prefer-const": "warn",

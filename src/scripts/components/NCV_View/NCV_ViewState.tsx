@@ -1,5 +1,5 @@
 import { RowRender, useVirtualListState } from "@lch/virtual-list";
-import { useState, useMemo, } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, } from "react";
 import { NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
 import { LiveManager, liveManager } from "../../services/LiveManager";
 import { LiveItem } from "../../Lives/LiveItem";
@@ -9,20 +9,36 @@ import { useResizeObserve } from "../../hooks/useElementSize";
 export type NCV_ViewState = ReturnType<typeof useNCV_ViewState>;
 
 export function useNCV_ViewState() {
+
   const {
+    setRef,
     width,
     height,
-    setRef,
   } = useResizeObserve();
 
   const [autoScroll, setAutoScroll] = useState(true);
   const headerState = useHeaderState(width, 50);
-  const virtualListState = useVirtualListState(height - 50, autoScroll);
+  const virtualListState = useVirtualListState();
+  // const virtualListState = useVirtualListState(height - 50, autoScroll);
+
+  useEffect(() => {
+    virtualListState.dispatch(
+      virtualListState.value.setViewportHeight(height - 50)
+    );
+  }, [virtualListState, height]);
+  useEffect(() => {
+    virtualListState.dispatch(
+      virtualListState.value.setAutoScroll(autoScroll)
+    );
+  }, [virtualListState, autoScroll]);
 
   const rowRender = useMemo(() => createCommentViewRow(liveManager, headerState), [headerState]);
 
   const addLiveItems = (liveItems: LiveItem[]) => {
-    virtualListState.addContents(liveItems.map(item => item.id));
+    virtualListState.dispatch(
+      virtualListState.value.addContents(liveItems.map(item => item.id))
+      // virtualListState.value.addContents(liveItems.map(item => item.id))
+    );
   };
 
   return {

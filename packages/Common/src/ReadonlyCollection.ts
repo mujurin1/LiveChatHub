@@ -1,4 +1,4 @@
-import { Fn } from "./util";
+import { SetonlyCollection } from "./SetOnlyCollection";
 
 /**
  * 一意のキーと値をセットで持っている読み取り専用コレクション\
@@ -39,6 +39,8 @@ export interface ReadonlyCollection<
    * @param index インデックス
    */
   atValue(index: number): V | undefined;
+
+  clone(): SetonlyCollection<K, V>;
 
   // /**
   //  * 現在の要素から条件に一致する要素だけの新しいコレクションを返す

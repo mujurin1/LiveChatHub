@@ -159,7 +159,7 @@ class DemoConnection {
         this.createContent(1);
       }, 100);
 
-      this.createContent(1);
+      this.createContent(10);
     }, 0);
   }
 
