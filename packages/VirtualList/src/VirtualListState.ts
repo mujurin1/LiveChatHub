@@ -1,14 +1,63 @@
-import { useMemo, useState } from "react";
-import { SetonlyCollection } from "@lch/common";
+import { SetonlyCollection, createSlice } from "@lch/common";
 import { LinkedList, LinkedNode } from "./LinkedList";
 import { RowLayout } from "./RowLayout";
 import { MIN_ROW_HEIGHT } from "./VirtualList";
 
-
 type RowLayoutNode = LinkedNode<RowLayout>;
 
+export interface VirtualListState {
+  contentHeights: SetonlyCollection<number, number>;
+  rowLayoutNode: RowLayoutNode | null;
 
-export class _VirtualListState {
+  rowCount: number;
+  rowShift: number;
+  viewportHeight: number;
+  scrollTop: number;
+  autoScroll: boolean;
+}
+
+export const virtualListStateSlice = createSlice({
+  create: (): VirtualListState => ({
+    contentHeights: new SetonlyCollection<number, number>(),
+    rowLayoutNode: null,
+
+    rowCount: 0,
+    rowShift: 0,
+    viewportHeight: 0,
+    scrollTop: 0,
+    autoScroll: true,
+  }),
+  reducers: {
+    scrollTo: (state, scrollTop: number) => {
+      if (scrollTop < 0) scrollTop = 0;
+      state.scrollTop += scrollTop;
+    },
+    scrollToBottom: (state) => {
+      state.autoScroll = false;
+    },
+  },
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class VirtualListState__ implements VirtualListState {
   static readonly __dbg_user_scroll_ref: {
     current: boolean;
   } = { current: true };
@@ -24,23 +73,10 @@ export class _VirtualListState {
     readonly autoScroll: boolean,
   ) { }
 
-  static create(): _VirtualListState {
-    return new _VirtualListState(
-      new SetonlyCollection<number, number>(),
-      null,
-
-      0,
-      0,
-      0,
-      0,
-      true,
-    );
-  }
-
-  scrollTo(scrollTop: number): _VirtualListState {
+  scrollTo(scrollTop: number): VirtualListState__ {
     if (scrollTop < 0) scrollTop = 0;
 
-    const newState = new _VirtualListState(
+    const newState = new VirtualListState__(
       this.contentHeights,
       this.rowLayoutNode,
       this.rowCount,
@@ -53,12 +89,12 @@ export class _VirtualListState {
     return newState.refreshRowLayout();
   }
 
-  scrollToBottom(): _VirtualListState {
+  scrollToBottom(): VirtualListState__ {
     const top = this.getSumContentHeight() - this.viewportHeight;
     return this.scrollTo(top);
   }
 
-  addContent(contentId: number, initialHeight?: number): _VirtualListState {
+  addContent(contentId: number, initialHeight?: number): VirtualListState__ {
     const bottom = this.getSumContentHeight() - this.viewportHeight;
     const isAutoScroll = this.autoScroll && bottom <= this.scrollTop + 3;
 
@@ -69,7 +105,7 @@ export class _VirtualListState {
     const contentHeights = this.contentHeights.clone();
     contentHeights.set(contentId, initialHeight);
 
-    const newState = new _VirtualListState(
+    const newState = new VirtualListState__(
       contentHeights,
       this.rowLayoutNode,
       this.rowCount,
@@ -83,15 +119,15 @@ export class _VirtualListState {
     return newState;
   }
 
-  addContents(contentIds: number[], initialHeight?: number): _VirtualListState {
-    let newState: _VirtualListState = this;
+  addContents(contentIds: number[], initialHeight?: number): VirtualListState__ {
+    let newState: VirtualListState__ = this;
     for (const contentId of contentIds)
       newState = newState.addContent(contentId, initialHeight);
 
     return newState;
   }
 
-  updateRowHeight(contentId: number, height: number): _VirtualListState {
+  updateRowHeight(contentId: number, height: number): VirtualListState__ {
     if (this.rowLayoutNode == null) return this;
 
     const oldValue = this.contentHeights.getValue(contentId);
@@ -106,7 +142,7 @@ export class _VirtualListState {
       scrollTop += height - oldValue;
     }
 
-    const newState = new _VirtualListState(
+    const newState = new VirtualListState__(
       contentHeights,
       this.rowLayoutNode,
       this.rowCount,
@@ -126,7 +162,7 @@ export class _VirtualListState {
     return newState.refreshRowLayout();
   }
 
-  setViewportHeight(height: number): _VirtualListState {
+  setViewportHeight(height: number): VirtualListState__ {
     if (height === this.viewportHeight) return this;
 
     let diff = height - this.viewportHeight;
@@ -144,7 +180,7 @@ export class _VirtualListState {
 
     const rowCount = Math.floor(height / MIN_ROW_HEIGHT) + 2;
 
-    const newState = new _VirtualListState(
+    const newState = new VirtualListState__(
       this.contentHeights,
       this.rowLayoutNode,
       rowCount,
@@ -160,10 +196,10 @@ export class _VirtualListState {
     return newState.refreshRowLayout();
   }
 
-  setAutoScroll(autoScroll: boolean): _VirtualListState {
+  setAutoScroll(autoScroll: boolean): VirtualListState__ {
     if (autoScroll === this.autoScroll) return this;
 
-    return new _VirtualListState(
+    return new VirtualListState__(
       this.contentHeights,
       this.rowLayoutNode,
       this.rowCount,
@@ -177,7 +213,7 @@ export class _VirtualListState {
   /**
    * こレで求めているものは計算で求まるので‥あとで‥
    */
-  refreshRowLayout(): _VirtualListState {
+  refreshRowLayout(): VirtualListState__ {
     let contentIndex = 0;
     let rowsShift = this.scrollTop;
 
@@ -213,7 +249,7 @@ export class _VirtualListState {
     }
     //#endregion rowLayoutNode
 
-    return new _VirtualListState(
+    return new VirtualListState__(
       this.contentHeights,
       rowLayoutNode,
       this.rowCount,
@@ -269,16 +305,3 @@ export class _VirtualListState {
   }
 }
 
-export type VirtualListState = ReturnType<typeof useVirtualListState>;
-export function useVirtualListState() {
-  const [virtualListState, setVirtualListState] = useState(
-    () => _VirtualListState.create()
-  );
-
-  const res = useMemo(() => ({
-    value: virtualListState,
-    dispatch: setVirtualListState
-  }), [virtualListState]);
-
-  return res;
-}

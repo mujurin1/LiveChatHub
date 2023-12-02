@@ -1,10 +1,10 @@
 import { AnyAction, Selector, ThunkAction, configureStore, createSelector } from "@reduxjs/toolkit";
 import { useDispatch, TypedUseSelectorHook, useSelector } from "react-redux";
-// import { headerReducer } from "./slices/headerSlice";
+import { headerReducer, setLineup } from "./slices/headerSlice";
 
 export const store = configureStore({
   reducer: {
-    // header: headerReducer
+    header: headerReducer
   },
 });
 
@@ -28,3 +28,11 @@ export type TypedCreateSelector<State> = <
 ) => ReturnType<typeof createSelector<SelectorsArray, Result>>;
 export const createAppSelector: TypedCreateSelector<RootState> = createSelector;
 // export const createDraftSafeAppSelector: TypedCreateSelector<RootState> = createDraftSafeSelector;
+
+
+function X() {
+  const state = useAppSelector(state => state.header);
+  const dispatch = useAppDispatch();
+
+  dispatch(setLineup());
+}

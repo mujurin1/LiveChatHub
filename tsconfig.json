@@ -12,6 +12,6 @@
   "include": [
     "src/**/*",
     "packages/VirtualList/src/VirtualList.tsx",
-    "packages/VirtualList/src/VirtualListState.tsx"
+    "packages/VirtualList/src/VirtualListState.ts"
   ]
 }

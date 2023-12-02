@@ -1,10 +1,9 @@
-import { VirtualList, _VirtualListState } from "@lch/virtual-list";
+import { VirtualList } from "@lch/virtual-list";
 import { NCV_ViewState } from "./NCV_ViewState";
 import { NCV_Header } from "./NCV_Header";
 import { useReceiveLiveItems } from "../../services/LiveManager";
 
 import "./NCV_View.css";
-import { useCallback } from "react";
 
 export * from "./NCV_Header";
 export * from "./NCV_ViewState";
