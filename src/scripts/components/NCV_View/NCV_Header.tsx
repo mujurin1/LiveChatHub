@@ -42,6 +42,7 @@ export function NCV_Header({ state, actions }: NCV_HeaderProps) {
 
     actions.startResizeColumn(index, e.clientX);
     removeEventRef.current = removeEventListener;
+    // slice.reducers (絶対に不変なので)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
