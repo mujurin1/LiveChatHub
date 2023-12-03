@@ -1,207 +1,126 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ReducersToActions, assert, assertNotNullish, createSlice } from "@lch/common";
 
-export type ColumnType = "item-id" | "no" | "icon" | "name" | "time" | "content" | "info";
-export type ColumnState = { type: ColumnType; width: number; };
 
-export interface NCV_HeaderColumnState {
-  columns: ColumnState[];
-  columnsTemp: ColumnState[] | null;
-  flexIndex: number;
-}
 
 export const HEADER_COL_MIN_WIDTH = 20;
 export const SCROLL_BAR_WIDTH = 10;
 
-const getInitialHeaderColumnState = () => ({
-  columns: [
-    { type: "item-id", width: 180 },
-    { type: "name", width: 180 },
-    { type: "time", width: 180 },
-    { type: "content", width: 100 },
-  ],
-  columnsTemp: null,
-  flexIndex: 3,
-} as NCV_HeaderColumnState);
+export type ColumnType = "item-id" | "no" | "icon" | "name" | "time" | "content" | "info";
+export type ColumnState = { type: ColumnType; width: number; };
 
-export type NCV_HeaderState = ReturnType<typeof useHeaderState>;
-
-export interface NCV_HeaderProps {
-  /**
-   * ヘッダーの幅
-   */
+export interface NCV_HeaderState {
   width: number;
-  /**
-   * ヘッダーの高さ
-   */
   height: number;
+  flexIndex: number;
+  columns: ColumnState[];
+
+  resizeTemp: ResizeTemp | null;
 }
 
+export const ncv_HeaderStateSlice = createSlice({
+  create: (): NCV_HeaderState => ({
+    width: 100 * 3 + 100,
+    height: 50,
+    flexIndex: 3,
+    columns: [
+      { type: "item-id", width: 100 },
+      { type: "name", width: 100 },
+      { type: "time", width: 100 },
+      { type: "content", width: 100 },
+    ],
+    resizeTemp: null
+  }),
+  reducers: {
+    setHeaderHeight: (state, height: number) => {
+      state.height = height;
+    },
+    setHeaderWidth: (state, width: number) => {
+      const diffWidth = width - state.width;
+      state.width = width - SCROLL_BAR_WIDTH;
+      state.columns[state.flexIndex].width += diffWidth;
+    },
+    // setWidth: (state, index: number, width: number) => {
+    //   width = Math.min(width, HEADER_COL_MIN_WIDTH);
+    //   const diff = width - state.columns[index].width;
+    //   if (diff === 0) return;
 
+    //   state.columns[index].width = width;
+    //   state.columns[state.flexIndex].width += diff;
+    // },
 
-export function useHeaderState(headerWidth: number, headerHeight: number) {
-  const columnWidth = headerWidth - SCROLL_BAR_WIDTH;
+    startResizeColumn: (state, index: number, mouseX: number) => {
+      const right = index >= state.flexIndex;
+      if (right) index++;
 
-  //#region HeaderColumnState の設定
-  const [headerColumns, setHeaderColumns] = useState(getInitialHeaderColumnState().columns);
-  const [headerColumnsTemp, setHeaderColumnsTemp] = useState(getInitialHeaderColumnState().columnsTemp);
-  const [flexIndex] = useState(getInitialHeaderColumnState().flexIndex);
+      state.resizeTemp = {
+        targetIndex: index,
+        amount: 0,
+        startX: mouseX,
+        right,
+      };
+    },
+    resizeColumn: (state, mouseX: number) => {
+      assertNotNullish(state.resizeTemp);
 
-  const setWidth = useCallback((index: number, width: number) => {
-    setHeaderColumns(oldState => {
-      const newState = oldState.slice();
-      newState[index].width = width;
-      return newState;
-    });
-  }, []);
+      // targetWidth を増やす値
+      let amount = state.resizeTemp.right
+        ? state.resizeTemp.startX - mouseX
+        : mouseX - state.resizeTemp.startX;
 
-  const setWidthAndFlexWidth = useCallback((index: number, width: number, flexWidth: number) => {
-    setHeaderColumns(oldState => {
-      const newState = oldState.slice();
-      newState[index].width = width;
-      newState[flexIndex].width = flexWidth;
-      return newState;
-    });
-  }, [flexIndex]);
-  //#endregion HeaderColumnState の設定
+      if (amount < 0) {
+        const newWidth = state.columns[state.resizeTemp.targetIndex].width + amount;
+        if (newWidth < HEADER_COL_MIN_WIDTH)
+          amount = HEADER_COL_MIN_WIDTH - newWidth;
+      } else {
+        const newFlexWidth = state.columns[state.flexIndex].width - amount;
+        if (newFlexWidth < HEADER_COL_MIN_WIDTH)
+          amount = HEADER_COL_MIN_WIDTH - newFlexWidth;
+      }
 
-
-  const [resizeTemp, setResizeTemp] = useState<ResizeTemp | null>(null);
-  const [resetedPartionEvent, setResetedPartionEvent] = useState(false);
-  const [removeEventListener, setRemoveEventListener] = useState<(() => void) | null>(null);
-
-  // 横幅の再調整
-  useEffect(() => {
-    const oldWidth = headerColumns.reduce((s, v) => s - v.width, columnWidth);
-    if (oldWidth === 0) return;
-
-    const flexWidth = headerColumns[flexIndex].width + oldWidth;
-    setWidth(flexIndex, flexWidth);
-  }, [setWidth, flexIndex, headerColumns, columnWidth]);
-
-  useEffect(() => {
-    if (!resetedPartionEvent || resizeTemp == null || headerColumnsTemp == null) return;
-    setResetedPartionEvent(false);
-
-    const changeWidths = (clientX: number, isFinish: boolean): void => {
-      /** 幅の変化量 */
-      let amount = clientX - resizeTemp.startX;
       if (amount === 0) return;
 
-      if (!resizeTemp.left) amount *= -1;
-
-      let width = resizeTemp.startTargetWidth + amount;
-      let flexWidth = resizeTemp.startFlexWidth - amount;
-
-      const limit = width - HEADER_COL_MIN_WIDTH;
-      if (limit < 0) {
-        width -= limit;
-        flexWidth += limit;
-      } else {
-        const flexLimit = flexWidth - HEADER_COL_MIN_WIDTH;
-        if (flexLimit < 0) {
-          width += flexLimit;
-          flexWidth -= flexLimit;
-        }
-      }
-
-      if (isFinish) {
-        setWidthAndFlexWidth(resizeTemp.index, width, flexWidth);
-      } else {
-        const columns = [...headerColumnsTemp];
-        columns[resizeTemp.index] = {
-          ...columns[resizeTemp.index],
-          width,
-        };
-        columns[flexIndex] = {
-          ...columns[flexIndex],
-          width: flexWidth,
-        };
-        columns[flexIndex].width = flexWidth;
-        setHeaderColumnsTemp(columns);
-      }
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      changeWidths(e.clientX, false);
-    };
-
-    const onMouseUp = (e: MouseEvent) => {
-      changeWidths(e.clientX, true);
-      setResizeTemp(null);
-      setHeaderColumnsTemp(null);
-
-      removeEventListener();
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-
-    const removeEventListener = () => {
-      setRemoveEventListener(null);
-
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-    setRemoveEventListener(() => removeEventListener);
-  }, [setWidthAndFlexWidth, flexIndex, resizeTemp, headerColumnsTemp, resetedPartionEvent]);
-
-  const partitionMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
-      removeEventListener?.();
-
-      const left = index < flexIndex;
-      if (!left) index++;
-
-      setResizeTemp({
-        index,
-        startTargetWidth: headerColumns[index].width,
-        startFlexWidth: headerColumns[flexIndex].width,
-        startX: e.clientX,
-        left,
-      });
-      setHeaderColumnsTemp(headerColumns);
-
-      setResetedPartionEvent(true);
+      state.resizeTemp.amount = amount;
     },
-    [removeEventListener, flexIndex, headerColumns]
-  );
+    finishResizeColumn: (state) => {
+      assertNotNullish(state.resizeTemp);
 
-  const returnValue = useMemo(() => {
+      state.columns[state.resizeTemp.targetIndex].width += state.resizeTemp.amount;
+      state.columns[state.flexIndex].width -= state.resizeTemp.amount;
 
-    return ({
-      height: headerHeight,
+      state.resizeTemp = null;
+    }
+  }
+});
 
-      headerColumns,
-      headerColumnsTemp,
+export type NCV_HeaderStateActions = ReducersToActions<typeof ncv_HeaderStateSlice.reducers>;
 
-      partitionMouseDown,
-    });
-  }, [headerColumns, headerColumnsTemp, headerHeight, partitionMouseDown]);
+const reducers = ncv_HeaderStateSlice.reducers;
 
-  return returnValue;
-}
+export const getTempOrActualColumns = (state: NCV_HeaderState): ColumnState[] => {
+  if (state.resizeTemp == null) return state.columns;
+
+  const columns: ColumnState[] = [];
+
+  for (let i = 0; i < state.columns.length; i++) {
+    columns[i] = { ...state.columns[i] };
+  }
+
+  columns[state.resizeTemp.targetIndex].width += state.resizeTemp.amount;
+  columns[state.flexIndex].width -= state.resizeTemp.amount;
+
+  return columns;
+};
 
 
-interface ResizeTemp {
-  /**
-   * ターゲットのインデックス
-   */
-  index: number;
-  /**
-   * 開始時のターゲットのカラムの幅
-   */
-  startTargetWidth: number;
-  /**
-   * 開始時のフレックスカラムの幅
-   */
-  startFlexWidth: number;
-  /**
-   * 開始時のマウス座標X
-   */
-  startX: number;
-  /**
-   * フレックスカラムより左か
-   */
-  left: boolean;
+
+export interface ResizeTemp {
+  /** ターゲットのインデックス */
+  readonly targetIndex: number;
+  /** 最後にターゲット幅を増やす値 */
+  amount: number;
+
+  /** 開始時のマウス座標X */
+  readonly startX: number;
+  /** フレックスカラムより右か */
+  readonly right: boolean;
 }

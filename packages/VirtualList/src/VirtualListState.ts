@@ -1,4 +1,4 @@
-import { SetonlyCollection, createSlice } from "@lch/common";
+import { ReducersToActions, SetonlyCollection, createSlice } from "@lch/common";
 import { LinkedList, LinkedNode } from "./LinkedList";
 import { RowLayout } from "./RowLayout";
 import { MIN_ROW_HEIGHT } from "./VirtualList";
@@ -149,6 +149,8 @@ export const virtualListStateSlice = createSlice({
     },
   }
 });
+
+export type VirtualListStateActions = ReducersToActions<typeof virtualListStateSlice.reducers>;
 
 const reducers = virtualListStateSlice.reducers;
 

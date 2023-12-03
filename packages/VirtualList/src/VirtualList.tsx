@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { VirtualListState, sumContentHeight, virtualListStateSlice } from "./VirtualListState";
+import { VirtualListState, sumContentHeight, VirtualListStateActions } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
 import { LinkedList } from "./LinkedList";
 
 import "./VirtualList.css";
-import { ReducersToActions } from "@lch/common";
 
 export type RowRender = (props: { contentId: number; }) => JSX.Element;
 
@@ -12,7 +11,7 @@ export const MIN_ROW_HEIGHT = 40;
 
 export interface VirtualListProps {
   state: VirtualListState;
-  actions: ReducersToActions<typeof virtualListStateSlice.reducers>,
+  actions: VirtualListStateActions;
   rowRender: RowRender;
 }
 
@@ -64,8 +63,6 @@ export function VirtualList(props: VirtualListProps) {
   // }, [state.scrollTop, __v]);
 
   useEffect(() => {
-    console.log("EF");
-
     if (__v == null) return;
 
     const fn = (_e: Event) => {

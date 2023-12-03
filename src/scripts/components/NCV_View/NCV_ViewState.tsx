@@ -1,10 +1,10 @@
-import { RowRender, VirtualListState, sumContentHeight, virtualListStateSlice } from "@lch/virtual-list";
-import { useState, useMemo, useEffect } from "react";
-import { NCV_HeaderState, useHeaderState } from "./NCV_HeaderState";
+import { RowRender, VirtualListState, virtualListStateSlice } from "@lch/virtual-list";
+import { useState, useMemo } from "react";
 import { LiveManager, liveManager } from "../../services/LiveManager";
 import { LiveItem } from "../../Lives/LiveItem";
 import { useResizeObserve } from "../../hooks/useElementSize";
 import { useSliceState } from "@lch/common";
+import { NCV_HeaderState, SCROLL_BAR_WIDTH, ncv_HeaderStateSlice } from "./NCV_HeaderState";
 
 
 export type VirtualListStateSet = [VirtualListState, React.Dispatch<React.SetStateAction<VirtualListState>>];
@@ -18,13 +18,16 @@ export function useNCV_ViewState() {
   } = useResizeObserve();
 
   const [autoScroll, setAutoScroll] = useState(true);
-  const headerState = useHeaderState(width, 50);
-  const [virtualListState, actions] = useSliceState(virtualListStateSlice);
+  // const headerState = useHeaderState(width, 50);
+  const [headerState, headerStateActions] = useSliceState(ncv_HeaderStateSlice);
+  const [virtualListState, virtualListActions] = useSliceState(virtualListStateSlice);
 
+  if (width - SCROLL_BAR_WIDTH !== headerState.width)
+    headerStateActions.setHeaderWidth(width);
   if (height - 50 !== virtualListState.viewportHeight)
-    actions.setViewportHeight(height - 50);
+    virtualListActions.setViewportHeight(height - 50);
   if (autoScroll !== virtualListState.autoScroll)
-    actions.setAutoScroll(autoScroll);
+    virtualListActions.setAutoScroll(autoScroll);
   // useEffect(() => {
   //   actions.setViewportHeight(height - 50);
   // }, [actions, height]);
@@ -35,7 +38,7 @@ export function useNCV_ViewState() {
   const rowRender = useMemo(() => createCommentViewRow(liveManager, headerState), [headerState]);
 
   const addLiveItems = (liveItems: LiveItem[]) => {
-    actions.addContents(liveItems.map(item => item.id));
+    virtualListActions.addContents(liveItems.map(item => item.id));
   };
 
 
@@ -44,8 +47,9 @@ export function useNCV_ViewState() {
     setRef,
 
     virtualListState,
-    virtualListActions: actions,
+    virtualListActions,
     headerState,
+    headerStateActions,
     autoScroll,
 
     setAutoScroll,
@@ -56,7 +60,8 @@ export function useNCV_ViewState() {
 }
 
 function createCommentViewRow(liveManager: LiveManager, headerState: NCV_HeaderState) {
-  const steColumns = headerState.headerColumnsTemp ?? headerState.headerColumns;
+  // const steColumns = headerState.headerColumnsTemp ?? headerState.headerColumns;
+  const steColumns = headerState.columns;
 
   return function RowRender({ contentId }: Parameters<RowRender>[0]) {
     const item = liveManager.getLiveItem(contentId);

@@ -1,32 +1,58 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import { css } from "@emotion/react";
-import { HEADER_COL_MIN_WIDTH, NCV_HeaderState } from "./NCV_HeaderState";
+import { HEADER_COL_MIN_WIDTH, NCV_HeaderState, NCV_HeaderStateActions, getTempOrActualColumns } from "./NCV_HeaderState";
+import { node } from "webpack";
 
 export * from "./NCV_HeaderState";
 
 export interface NCV_HeaderProps {
   state: NCV_HeaderState;
+  actions: NCV_HeaderStateActions;
 }
 
-export function NCV_Header(props: NCV_HeaderProps) {
-  const {
-    height,
+export function NCV_Header({ state, actions }: NCV_HeaderProps) {
+  const lastIndex = state.columns.length - 1;
 
-    headerColumns,
-    headerColumnsTemp,
+  const columns = getTempOrActualColumns(state);
 
-    partitionMouseDown,
-  } = props.state;
-  const lastIndex = headerColumns.length - 1;
+  const removeEventRef = useRef<() => void | null>();
+
+  const partialMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
+    if (removeEventRef.current != null) removeEventRef.current();
+
+    const onMouseMove = (e: MouseEvent) => {
+      actions.resizeColumn(e.clientX);
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      actions.resizeColumn(e.clientX);
+      actions.finishResizeColumn();
+
+      removeEventListener();
+    };
+
+    const removeEventListener = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
+
+    actions.startResizeColumn(index, e.clientX);
+    removeEventRef.current = removeEventListener;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
       className="ncv-view-header"
       css={css`
-      height: ${height}px;
+      height: ${state.height}px;
       `}
     >
-      {(headerColumnsTemp ?? headerColumns).map((column, i) => (
+      {(columns).map((column, i) => (
         <React.Fragment key={column.type}>
           <div
             className="ncv-view-header-item"
@@ -39,7 +65,7 @@ export function NCV_Header(props: NCV_HeaderProps) {
             {i === lastIndex ? undefined :
               <div
                 className="ncv-view-header-item-partition"
-                onMouseDown={e => partitionMouseDown(e, i)}
+                onMouseDown={e => partialMouseDown(e, i)}
               />}
           </div>
         </React.Fragment>

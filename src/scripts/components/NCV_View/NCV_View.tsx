@@ -19,6 +19,7 @@ export function NCV_View({ state }: NCV_ViewProps) {
     virtualListState,
     virtualListActions,
     headerState,
+    headerStateActions,
     autoScroll,
 
     setRef,
@@ -26,14 +27,15 @@ export function NCV_View({ state }: NCV_ViewProps) {
     rowRender,
   } = state;
 
-  const realityColumns = headerState.headerColumns.map(x => x.width);
-  const tempColumns = headerState.headerColumnsTemp?.map(x => x.width);
+  // const realityColumns = headerState.headerColumns.map(x => x.width);
+  // const tempColumns = headerState.headerColumnsTemp?.map(x => x.width);
 
   return (
     <>
       <div className="ncv-view-body" ref={setRef}>
         <NCV_Header
           state={headerState}
+          actions={headerStateActions}
         />
         <VirtualList
           state={virtualListState}
@@ -59,11 +61,11 @@ export function NCV_View({ state }: NCV_ViewProps) {
         // onChange={e => _VirtualListState.__dbg_user_scroll_ref.current = e.target.checked}
         />
 
-        <div style={{ fontSize: 32 }}>
+        {/* <div style={{ fontSize: 32 }}>
           <label>realityColumns: {realityColumns.join()}</label>
-          {"　"}
+          {""}
           <label>tempColumns: {tempColumns?.join() ?? "null"}</label>
-        </div>
+        </div> */}
       </div>
     </>
   );
