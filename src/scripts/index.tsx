@@ -1,8 +1,8 @@
 import { virtualListStateSlice } from "@lch/virtual-list";
 import { useSliceState } from "@lch/common";
 import { createRoot } from "react-dom/client";
-import React, { useMemo, useState } from "react";
-import { Provider, useStore } from "react-redux";
+import React, { } from "react";
+import { Provider } from "react-redux";
 import { store } from "./store";
 import { LiveChatHub } from "./components/LiveChatHub";
 

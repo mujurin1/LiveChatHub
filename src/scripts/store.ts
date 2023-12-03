@@ -1,6 +1,6 @@
 import { AnyAction, Selector, ThunkAction, configureStore, createSelector } from "@reduxjs/toolkit";
 import { useDispatch, TypedUseSelectorHook, useSelector } from "react-redux";
-import { headerReducer, setLineup } from "./slices/headerSlice";
+import { headerReducer } from "./slices/headerSlice";
 
 export const store = configureStore({
   reducer: {
