@@ -35,19 +35,11 @@ export const ncv_HeaderStateSlice = createSlice({
       state.height = height;
     },
     setHeaderWidth: (state, width: number) => {
+      width -= SCROLL_BAR_WIDTH;
       const diffWidth = width - state.width;
-      state.width = width - SCROLL_BAR_WIDTH;
+      state.width = width;
       state.columns[state.flexIndex].width += diffWidth;
     },
-    // setWidth: (state, index: number, width: number) => {
-    //   width = Math.min(width, HEADER_COL_MIN_WIDTH);
-    //   const diff = width - state.columns[index].width;
-    //   if (diff === 0) return;
-
-    //   state.columns[index].width = width;
-    //   state.columns[state.flexIndex].width += diff;
-    // },
-
     startResizeColumn: (state, index: number, mouseX: number) => {
       const right = index >= state.flexIndex;
       if (right) index++;

@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from "react";
 import { css } from "@emotion/react";
 import { HEADER_COL_MIN_WIDTH, NCV_HeaderState, NCV_HeaderStateActions, getTempOrActualColumns } from "./NCV_HeaderState";
-import { node } from "webpack";
 
 export * from "./NCV_HeaderState";
 
@@ -15,7 +14,7 @@ export function NCV_Header({ state, actions }: NCV_HeaderProps) {
 
   const columns = getTempOrActualColumns(state);
 
-  const removeEventRef = useRef<() => void | null>();
+  const removeEventRef = useRef<(() => void) | null>();
 
   const partialMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
     if (removeEventRef.current != null) removeEventRef.current();
@@ -26,12 +25,14 @@ export function NCV_Header({ state, actions }: NCV_HeaderProps) {
 
     const onMouseUp = (e: MouseEvent) => {
       actions.resizeColumn(e.clientX);
-      actions.finishResizeColumn();
 
       removeEventListener();
     };
 
     const removeEventListener = () => {
+      removeEventRef.current = null;
+
+      actions.finishResizeColumn();
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };

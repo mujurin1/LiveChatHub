@@ -1,6 +1,6 @@
 import { VirtualList } from "@lch/virtual-list";
 import { NCV_ViewState } from "./NCV_ViewState";
-import { NCV_Header } from "./NCV_Header";
+import { NCV_Header, getTempOrActualColumns } from "./NCV_Header";
 import { useReceiveLiveItems } from "../../services/LiveManager";
 
 import "./NCV_View.css";
@@ -61,11 +61,15 @@ export function NCV_View({ state }: NCV_ViewProps) {
         // onChange={e => _VirtualListState.__dbg_user_scroll_ref.current = e.target.checked}
         />
 
-        {/* <div style={{ fontSize: 32 }}>
-          <label>realityColumns: {realityColumns.join()}</label>
-          {""}
-          <label>tempColumns: {tempColumns?.join() ?? "null"}</label>
-        </div> */}
+        <div style={{ fontSize: 32 }}>
+          <label>
+            Width: {headerState.width}
+            {"　"}
+            Columns: {getTempOrActualColumns(headerState).map(x => x.width).join()}
+            {"　"}
+            Resizing: {headerState.resizeTemp != null ? "Yes" : "No"}
+          </label>
+        </div>
       </div>
     </>
   );
