@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { Draft, produce } from "immer";
 import { useMemo, useState } from "react";
 
@@ -9,18 +8,24 @@ type Reducer<
   ReducerProp extends unknown[] | never
 > = ReducerProp extends unknown[]
   ? (state: Draft<State>, ...args: ReducerProp) => void
-  // : (state: Draft<State>, _: never) => void;
   : (state: Draft<State>) => void;
 
 type Slice<
   State,
-  Reducers extends { [K: string]: unknown[] | never; },
+  Reducers extends Record<string, unknown[] | never>,
 > = {
   create: () => State,
   reducers: {
     [K in keyof Reducers]: Reducer<State, Reducers[K]>
   };
 };
+
+
+export type ReducersToActions<
+  Reducers extends Record<string, (s: never, ...v: any[]) => void | ((s: never) => void)>
+> = {
+    [K in keyof Reducers]: Parameters<Reducers[K]> extends [any, ... infer U] ? (...params: U) => void : never
+  };
 
 export function createSlice<
   State,
@@ -33,7 +38,7 @@ export function useSliceState<
   State,
   Reducers extends Record<string, unknown[] | never>
 >(slice: Slice<State, Reducers>) {
-  const [state, setState] = useState(slice.create);
+  const [state, setState] = useState(() => slice.create());
 
   const reducers = useMemo(() => {
     const reducers = {} as {
@@ -49,14 +54,8 @@ export function useSliceState<
       type params = Reducers[typeof key];
       type reducerFunc = params extends unknown[] ? (...params: params) => void : () => void;
 
-      const reducerFunc = function (params: params) {
-        if (params == null) {
-          setState(produce<State>(draft => action(draft)));
-        } else {
-          // 任意個の引数を受取るためには arguments を使うしか無いので許容する
-          // eslint-disable-next-line prefer-rest-params
-          setState(produce<State>(draft => action(draft, ...arguments)));
-        }
+      const reducerFunc = (...params: params) => {
+        setState(produce<State>(draft => action(draft, ...params)));
       };
 
       reducers[key] = reducerFunc as reducerFunc;

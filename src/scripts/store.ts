@@ -28,11 +28,3 @@ export type TypedCreateSelector<State> = <
 ) => ReturnType<typeof createSelector<SelectorsArray, Result>>;
 export const createAppSelector: TypedCreateSelector<RootState> = createSelector;
 // export const createDraftSafeAppSelector: TypedCreateSelector<RootState> = createDraftSafeSelector;
-
-
-function X() {
-  const state = useAppSelector(state => state.header);
-  const dispatch = useAppDispatch();
-
-  dispatch(setLineup());
-}

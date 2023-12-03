@@ -17,6 +17,7 @@ export function NCV_View({ state }: NCV_ViewProps) {
 
   const {
     virtualListState,
+    virtualListActions,
     headerState,
     autoScroll,
 
@@ -36,6 +37,7 @@ export function NCV_View({ state }: NCV_ViewProps) {
         />
         <VirtualList
           state={virtualListState}
+          actions={virtualListActions}
           rowRender={rowRender}
         />
       </div>
@@ -53,8 +55,8 @@ export function NCV_View({ state }: NCV_ViewProps) {
         <input
           id="userScroll"
           type="checkbox"
-          defaultChecked={_VirtualListState.__dbg_user_scroll_ref.current}
-          onChange={e => _VirtualListState.__dbg_user_scroll_ref.current = e.target.checked}
+        // defaultChecked={_VirtualListState.__dbg_user_scroll_ref.current}
+        // onChange={e => _VirtualListState.__dbg_user_scroll_ref.current = e.target.checked}
         />
 
         <div style={{ fontSize: 32 }}>

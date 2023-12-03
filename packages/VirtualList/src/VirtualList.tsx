@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { VirtualListState } from "./VirtualListState";
+import { VirtualListState, sumContentHeight, virtualListStateSlice } from "./VirtualListState";
 import { RowLayout } from "./RowLayout";
 import { LinkedList } from "./LinkedList";
 
 import "./VirtualList.css";
+import { ReducersToActions } from "@lch/common";
 
 export type RowRender = (props: { contentId: number; }) => JSX.Element;
 
@@ -11,6 +12,7 @@ export const MIN_ROW_HEIGHT = 40;
 
 export interface VirtualListProps {
   state: VirtualListState;
+  actions: ReducersToActions<typeof virtualListStateSlice.reducers>,
   rowRender: RowRender;
 }
 
@@ -21,13 +23,11 @@ export function VirtualList(props: VirtualListProps) {
 
   //   updateRowHeight,    // updateRowHeight,
   // } = props.state;
-  const state = props.state;
+  const { state, actions } = props;
   const RowRender = props.rowRender;
 
   const resizeObserver = useMemo(() => new ResizeObserver(elements => {
     if (elements.length === 0) return;
-
-    let newState = state;
 
     for (const element of elements) {
       const target = element.target as HTMLElement;
@@ -36,17 +36,18 @@ export function VirtualList(props: VirtualListProps) {
       if (isNaN(contentId)) continue;
 
       // state[1](old => old.updateRowHeight(contentId, target.clientHeight));
-      newState = newState.updateRowHeight(contentId, target.clientHeight);
+      actions.updateRowHeight(contentId, target.clientHeight);
     }
 
-    state[1](newState);
-  }), [state]);
+  }), [actions]);
 
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const __height = state.getSumContentHeight();
+  const __height = sumContentHeight(state);
+  // if (scrollRef.current != null)
+  //   scrollRef.current.style.height = `${__height}px`;
   const __s = scrollRef.current;
   useEffect(() => {
     if (__s == null) return;
@@ -54,6 +55,8 @@ export function VirtualList(props: VirtualListProps) {
     __s.style.height = `${__height}px`;
   }, [__height, __s]);
 
+  // if (viewportRef.current != null)
+  //   viewportRef.current.scrollTop = state.scrollTop;
   const __v = viewportRef.current;
   useEffect(() => {
     if (__v == null) return;
@@ -66,18 +69,22 @@ export function VirtualList(props: VirtualListProps) {
 
     const fn = (_e: Event) => {
       if (__v == null) return;
-      if (!VirtualListState.__dbg_user_scroll_ref.current) return;
+      return;
+      // if (!VirtualListState.__dbg_user_scroll_ref.current) return;
 
       // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
       // プログラムなら何もしない
       // state[1](state.scrollTo(__v.scrollTop));
-      state[1](state.scrollTo(__v.scrollTop));
+      actions.scrollTo(__v.scrollTop);
     };
 
     __v.addEventListener("scroll", fn, { passive: true });
 
     return () => __v.removeEventListener("scroll", fn);
-  }, [state, __v]);
+  }, [actions, __v]);
+
+  console.log(state.scrollTop, state.rowShift);
+
 
   return (
     <div
