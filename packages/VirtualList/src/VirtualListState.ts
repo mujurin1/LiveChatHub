@@ -53,7 +53,6 @@ export const virtualListStateSlice = createSlice({
       if (isAutoScroll)
         reducers.scrollToBottom(state);
     },
-
     addContents: (state, contentIds: number[], initialHeight?: number) => {
       for (const contentId of contentIds)
         reducers.addContent(state, contentId, initialHeight);

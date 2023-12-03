@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 export type ColumnType = "item-id" | "no" | "icon" | "name" | "time" | "content" | "info";
 export type ColumnState = { type: ColumnType; width: number; };
@@ -12,9 +12,6 @@ export interface NCV_HeaderColumnState {
 export const HEADER_COL_MIN_WIDTH = 20;
 export const SCROLL_BAR_WIDTH = 10;
 
-// columns: ColumnState[];
-// columnsTemp: ColumnState[] | null;
-// flexIndex: number;
 const getInitialHeaderColumnState = () => ({
   columns: [
     { type: "item-id", width: 180 },
@@ -38,6 +35,8 @@ export interface NCV_HeaderProps {
    */
   height: number;
 }
+
+
 
 export function useHeaderState(headerWidth: number, headerHeight: number) {
   const columnWidth = headerWidth - SCROLL_BAR_WIDTH;
@@ -168,18 +167,20 @@ export function useHeaderState(headerWidth: number, headerHeight: number) {
     [removeEventListener, flexIndex, headerColumns]
   );
 
-  const returnValue = useMemo(() => ({
-    height: headerHeight,
+  const returnValue = useMemo(() => {
 
-    headerColumns,
-    headerColumnsTemp,
+    return ({
+      height: headerHeight,
 
-    partitionMouseDown,
-  }), [headerColumns, headerColumnsTemp, headerHeight, partitionMouseDown]);
+      headerColumns,
+      headerColumnsTemp,
+
+      partitionMouseDown,
+    });
+  }, [headerColumns, headerColumnsTemp, headerHeight, partitionMouseDown]);
 
   return returnValue;
 }
-
 
 
 interface ResizeTemp {

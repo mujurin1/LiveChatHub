@@ -35,7 +35,6 @@ export function VirtualList(props: VirtualListProps) {
 
       if (isNaN(contentId)) continue;
 
-      // state[1](old => old.updateRowHeight(contentId, target.clientHeight));
       actions.updateRowHeight(contentId, target.clientHeight);
     }
 
@@ -46,30 +45,31 @@ export function VirtualList(props: VirtualListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const __height = sumContentHeight(state);
-  // if (scrollRef.current != null)
-  //   scrollRef.current.style.height = `${__height}px`;
-  const __s = scrollRef.current;
-  useEffect(() => {
-    if (__s == null) return;
+  if (scrollRef.current != null)
+    scrollRef.current.style.height = `${__height}px`;
+  // const __s = scrollRef.current;
+  // useEffect(() => {
+  //   if (__s == null) return;
 
-    __s.style.height = `${__height}px`;
-  }, [__height, __s]);
+  //   __s.style.height = `${__height}px`;
+  // }, [__height, __s]);
 
-  // if (viewportRef.current != null)
-  //   viewportRef.current.scrollTop = state.scrollTop;
+  if (viewportRef.current != null)
+    viewportRef.current.scrollTop = state.scrollTop;
   const __v = viewportRef.current;
-  useEffect(() => {
-    if (__v == null) return;
+  // useEffect(() => {
+  //   if (__v == null) return;
 
-    __v.scrollTop = state.scrollTop;
-  }, [state.scrollTop, __v]);
+  //   __v.scrollTop = state.scrollTop;
+  // }, [state.scrollTop, __v]);
 
   useEffect(() => {
+    console.log("EF");
+
     if (__v == null) return;
 
     const fn = (_e: Event) => {
       if (__v == null) return;
-      return;
       // if (!VirtualListState.__dbg_user_scroll_ref.current) return;
 
       // 出来ることならここでイベントの発生原因を ユーザー/プログラム で判定したい
@@ -83,7 +83,6 @@ export function VirtualList(props: VirtualListProps) {
     return () => __v.removeEventListener("scroll", fn);
   }, [actions, __v]);
 
-  console.log(state.scrollTop, state.rowShift);
 
 
   return (

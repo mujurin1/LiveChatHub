@@ -37,6 +37,7 @@ class _LiveManager {
   // }
 
   public getLiveItem(liveItemId: number): LiveItem {
+    // return this.lives[0].liveItems[0];
     const managedIndex = liveItemId & 0xFF;
     const itemIndex = liveItemId >> 8;
     const live = this.lives.find(live => live.managedIndex === managedIndex)!;
